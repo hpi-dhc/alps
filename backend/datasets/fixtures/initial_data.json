@@ -1,0 +1,94 @@
+[{
+    "model": "datasets.user",
+    "pk": "5e2812c1-d424-4260-baa3-6a05a15359f5",
+    "fields": {
+        "username": "admin",
+        "password": "pbkdf2_sha256$150000$kzAZSUtH94dQ$MGn0gCieseCRLem3t/AAj9WAxB5mYN30U4ZP5DT4Fls=",
+        "is_superuser": true,
+        "is_active": true,
+        "date_joined": "2019-05-15 09:53:44.506084+00"
+    }
+}, {
+    "model": "authtoken.token",
+    "pk": "bcc8cfdb3ea834fc4fa5a430649172d910eed127",
+    "fields": {
+        "user": "5e2812c1-d424-4260-baa3-6a05a15359f5",
+        "created": "2019-05-15 10:39:50.858451+00"
+    }
+}, {
+    "model": "datasets.source",
+    "pk": "f31087bb-d6e7-4c12-b622-422bdf63ad12",
+    "fields": {
+        "name": "Faros",
+        "classname": "datasets.sources.faros.FarosSource",
+        "fileOptions": "{}"
+    }
+}, {
+    "model": "datasets.source",
+    "pk": "e740ee51-42be-4397-b74f-a2095abf3e76",
+    "fields": {
+        "name": "Empatica E4",
+        "classname": "datasets.sources.empatica_e4.EmpaticaE4Source",
+        "fileOptions": "{}"
+    }
+}, {
+    "model": "datasets.source",
+    "pk": "75c67b65-1b5a-434b-a304-d6e9070aef86",
+    "fields": {
+        "name": "Biovotion Everion",
+        "classname": "datasets.sources.everion.EverionSource",
+        "fileOptions": "{}"
+    }
+}, {
+    "model": "datasets.subject",
+    "pk": "2d5a1cf2-6422-4e82-a209-e76d455bca29",
+    "fields": {
+        "identifier": "001-CG",
+        "created_at": "2019-05-13T11:41:53.507Z",
+        "user": "5e2812c1-d424-4260-baa3-6a05a15359f5"
+    }
+}, {
+    "model": "datasets.session",
+    "pk": "9e7b6dcc-f571-4c3a-aac0-79b076a2355c",
+    "fields": {
+        "title": "Some other session from a different day",
+        "date": "2019-03-21",
+        "subject_id": "2d5a1cf2-6422-4e82-a209-e76d455bca29",
+        "created_at": "2019-05-13T11:41:53.507Z",
+        "user": "5e2812c1-d424-4260-baa3-6a05a15359f5"
+    }
+}, {
+    "model": "datasets.dataset",
+    "pk": "e51a2528-985c-4cea-9e71-cde47a88c60b",
+    "fields": {
+        "session": "9e7b6dcc-f571-4c3a-aac0-79b076a2355c",
+        "source": "e740ee51-42be-4397-b74f-a2095abf3e76",
+        "created_at": "2019-05-13T11:42:11.338Z",
+        "user": "5e2812c1-d424-4260-baa3-6a05a15359f5"
+    }
+}, {
+    "model": "datasets.signal",
+    "pk": "d453aeb6-d9c6-4e7a-814e-ac28c5f61854",
+    "fields": {
+        "name": "ECG",
+        "dataset": "e51a2528-985c-4cea-9e71-cde47a88c60b",
+        "created_at": "2019-05-13T11:42:30.124Z",
+        "user": "5e2812c1-d424-4260-baa3-6a05a15359f5"
+    }
+}, {
+    "model": "datasets.sample",
+    "pk": "1",
+    "fields": {
+        "signal": "d453aeb6-d9c6-4e7a-814e-ac28c5f61854",
+        "timestamp": "2019-05-13T11:42:30.114Z",
+        "value": 1.078
+    }
+}, {
+    "model": "datasets.sample",
+    "pk": "2",
+    "fields": {
+        "signal": "d453aeb6-d9c6-4e7a-814e-ac28c5f61854",
+        "timestamp": "2019-05-13T11:42:30.124Z",
+        "value": 1.232
+    }
+}]

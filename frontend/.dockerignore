@@ -1,0 +1,9 @@
+.vscode
+.editorconfig
+.env
+.md
+.yml
+.git
+README.md
+Dockerfile
+node_modules

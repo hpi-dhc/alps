@@ -1,0 +1,24 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pylint = "*"
+ptvsd = "*"
+
+[packages]
+celery = "*"
+django = "*"
+django-cors-headers = "*"
+django-rest-auth = "*"
+djangorestframework = "*"
+numpy = "*"
+pandas = "*"
+psycopg2 = "*"
+redis = "*"
+scipy = "*"
+pyedflib = "*"
+
+[requires]
+python_version = "3.7"
