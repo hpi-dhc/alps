@@ -1,38 +1,41 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
-import { normalize } from 'normalizr';
 import moment from 'moment';
 import uuid from 'uuid/v4';
 
 import { Container, Fab, Grid } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
+import SignalCard from '../components/Signal/Card';
+import { filterObjectByValue } from '../utils';
 
-import { useSession } from '../../api/sessions';
-import { getPlots, getPlotIdsBySession, getDomains } from '../../selectors/plots';
-import { useAppBarTitle } from '../../components/Common/AppBar';
-import SignalCard from '../../components/Signal/Card';
-import { upsertPlot, deletePlot, setPlotDomain } from '../../actions/plots';
-import * as schemas from '../../schemas';
+import { getSessions, getSignals, getDatasets } from '../selectors/data';
+import { getPlots, getPlotIdsBySession, getDomains } from '../selectors/plots';
+import { upsertPlot, deletePlot, setPlotDomain } from '../actions/plots';
+import * as Sessions from '../actions/sessions';
 
 function SessionPreprocess ({ match }) {
   const sessionId = match.params.sessionId;
-
-  const { data: session } = useSession(sessionId);
-  const normalized = normalize(session, schemas.session);
+  const session = useSelector(getSessions)[sessionId];
+  const datasets = useSelector((state) => {
+    const allDatasets = getDatasets(state);
+    return filterObjectByValue(allDatasets, each => each.session === sessionId);
+  });
+  const signals = useSelector(getSignals);
   const plotIds = useSelector((state) => getPlotIdsBySession(state)[sessionId]);
   const plots = useSelector((state) => getPlots(state));
   const domains = useSelector((state) => getDomains(state));
 
-  useAppBarTitle(session.title);
-
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(Sessions.get(sessionId));
+  }, [dispatch, sessionId]);
 
   const handleCreatePlot = useCallback(
     () => {
       if (!plotIds) {
         // determine initial domain to fit all signals
-        const { entities: { signals } } = normalize(session, schemas.session);
         const timestamps = Object.values(signals).reduce((object, each) => ({
           from: [...object.from, moment(each.first_timestamp).valueOf()],
           to: [...object.from, moment(each.last_timestamp).valueOf()],
@@ -42,7 +45,7 @@ function SessionPreprocess ({ match }) {
       }
       dispatch(upsertPlot(uuid(), { session: session.id }));
     },
-    [dispatch, session, plotIds]
+    [dispatch, session, signals, plotIds]
   );
 
   const handleChangePlot = useCallback(
@@ -80,15 +83,15 @@ function SessionPreprocess ({ match }) {
       let domainY = ['auto', 'auto'];
       if (plot.signal) {
         domainY = [
-          normalized.entities.signals[plot.signal].y_min,
-          normalized.entities.signals[plot.signal].y_max,
+          signals[plot.signal].y_min,
+          signals[plot.signal].y_max,
         ];
       }
       return (
         <Grid item key={each}>
           <SignalCard
-            datasets={normalized.entities.datasets}
-            signals={normalized.entities.signals}
+            datasets={datasets}
+            signals={signals}
             onChange={handleChangePlot}
             onClose={handleClosePlot}
             plot={plot}
@@ -103,7 +106,7 @@ function SessionPreprocess ({ match }) {
     });
   };
 
-  if (!session.datasets) {
+  if (!session) {
     return <div />;
   }
 

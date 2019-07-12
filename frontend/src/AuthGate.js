@@ -3,15 +3,15 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Route } from 'react-router-dom';
 import { isAuthenticated } from './selectors/authentication';
-import { INIT_APP } from './constants/ActionTypes';
+import { SOURCE_LIST_REQUEST } from './constants/ActionTypes';
 
 import App from './screens/App';
 import Login from './screens/Login';
 
-class Gate extends Component {
+class AuthGate extends Component {
   static propTypes = {
     initApp: PropTypes.func.isRequired,
-    isAuthenticated: PropTypes.bool.isRequired
+    isAuthenticated: PropTypes.bool.isRequired,
   }
 
   componentDidMount () {
@@ -44,14 +44,16 @@ class Gate extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    isAuthenticated: isAuthenticated(state)
+    isAuthenticated: isAuthenticated(state),
   };
 };
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    initApp: () => dispatch({ type: INIT_APP })
+    initApp: () => {
+      dispatch({ type: SOURCE_LIST_REQUEST });
+    },
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Gate);
+export default connect(mapStateToProps, mapDispatchToProps)(AuthGate);

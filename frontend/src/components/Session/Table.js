@@ -1,17 +1,25 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import moment from 'moment';
 import MaterialTable from 'material-table';
 import AddIcon from '@material-ui/icons/AddCircle';
 import DeleteIcon from '@material-ui/icons/Delete';
 
-function SessionTable ({ sessions, onAdd, onDelete, ...rest }) {
-  const sessionArray = useMemo(() => Object.values(sessions), [sessions]);
+SessionTable.propTypes = {
+  sessions: PropTypes.array.isRequired,
+  onAdd: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
+};
 
+SessionTable.defaultProps = {
+  sessions: [],
+};
+
+function SessionTable ({ sessions, onAdd, onDelete, ...rest }) {
   return (
     <MaterialTable
       {...rest}
-      data={sessionArray}
+      data={sessions}
       title='Sessions'
       options={{
         selection: true,
@@ -48,11 +56,5 @@ function SessionTable ({ sessions, onAdd, onDelete, ...rest }) {
     />
   );
 }
-
-SessionTable.propTypes = {
-  sessions: PropTypes.array,
-  onAdd: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired,
-};
 
 export default SessionTable;

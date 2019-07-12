@@ -1,5 +1,5 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import {
   Button,
   CssBaseline,
@@ -8,50 +8,50 @@ import {
   InputLabel,
   Paper,
   Typography,
-  withStyles
-} from '@material-ui/core'
+  withStyles,
+} from '@material-ui/core';
 
 class LoginForm extends Component {
   constructor (props) {
-    super(props)
+    super(props);
     this.state = {
       username: null,
-      password: null
-    }
+      password: null,
+    };
   }
 
   static propTypes = {
     classes: PropTypes.object.isRequired,
     handleSignIn: PropTypes.func.isRequired,
-    errorMessage: PropTypes.string
+    errorMessage: PropTypes.string,
   }
 
   handleInputChange = (event) => {
-    const { name, value } = event.target
+    const { name, value } = event.target;
     this.setState({
-      [name]: value
-    })
+      [name]: value,
+    });
   }
 
   handleSubmit = (event) => {
-    event.preventDefault()
-    const { username, password } = this.state
-    this.props.handleSignIn(username, password)
+    event.preventDefault();
+    const { username, password } = this.state;
+    this.props.handleSignIn(username, password);
   }
 
   getErrorMessage = () => {
-    const { errorMessage } = this.props
+    const { errorMessage } = this.props;
     if (!errorMessage) {
-      return ''
+      return '';
     }
     if (errorMessage.hasOwnProperty('non_field_errors')) {
-      return errorMessage.non_field_errors[0]
+      return errorMessage.non_field_errors[0];
     }
-    return 'Something went wrong.'
+    return 'Something went wrong.';
   }
 
   render () {
-    const { classes } = this.props
+    const { classes } = this.props;
 
     return (
       <main className={classes.main}>
@@ -82,7 +82,7 @@ class LoginForm extends Component {
           </form>
         </Paper>
       </main>
-    )
+    );
   }
 }
 
@@ -95,23 +95,23 @@ const styles = theme => ({
     [theme.breakpoints.up(400 + theme.spacing(3) * 2)]: {
       width: 400,
       marginLeft: 'auto',
-      marginRight: 'auto'
-    }
+      marginRight: 'auto',
+    },
   },
   paper: {
     marginTop: theme.spacing(8),
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    padding: `${theme.spacing(2)}px ${theme.spacing(3)}px ${theme.spacing(3)}px`
+    padding: `${theme.spacing(2)}px ${theme.spacing(3)}px ${theme.spacing(3)}px`,
   },
   form: {
     width: '100%', // Fix IE 11 issue.
-    marginTop: theme.spacing(1)
+    marginTop: theme.spacing(1),
   },
   submit: {
-    marginTop: theme.spacing(3)
-  }
-})
+    marginTop: theme.spacing(3),
+  },
+});
 
-export default withStyles(styles)(LoginForm)
+export default withStyles(styles)(LoginForm);

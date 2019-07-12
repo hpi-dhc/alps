@@ -1,54 +1,45 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import moment from 'moment';
 
-import DatasetTable from '../../components/Dataset/Table';
-import DatasetCreateDialog from '../../components/Dataset/CreateDialog';
+import DatasetTable from '../components/Dataset/Table';
+import DatasetCreateDialog from '../components/Dataset/CreateDialog';
 import { Typography, Container } from '@material-ui/core';
 
-import { useSession } from '../../api/sessions';
-import { useAppBarTitle } from '../../components/Common/AppBar';
-import Loading from '../../components/Common/Loading';
-import { createDataset, uploadFiles, deleteDataset } from '../../api/datasets';
-import Alert from '../../components/Common/Alert';
+import * as Datasets from '../actions/datasets';
+import * as Sessions from '../actions/sessions';
+import { getSessions, getDatasetsArrayBySession } from '../selectors/data';
+import Alert from '../components/Common/Alert';
 
 function SessionDetail ({ match }) {
-  const { sessionId } = match.params;
+  const dispatch = useDispatch();
   const [ isDialogOpen, setDialogOpen ] = useState(false);
   const [ isAlertOpen, setAlertOpen ] = useState(false);
   const [ datasetsToDelete, setDatasetsToDelete ] = useState([]);
-  const { data: session, isLoading, reload } = useSession(sessionId);
-  useAppBarTitle(session.title);
+
+  const { sessionId } = match.params;
+  const session = useSelector(getSessions)[sessionId];
+  const datasets = useSelector(getDatasetsArrayBySession)[sessionId];
+
+  useEffect(() => {
+    dispatch(Sessions.get(sessionId));
+  }, [dispatch, sessionId]);
 
   const handleSaveDataset = useCallback(
-    async (data) => {
-      const { session, files, ...payload } = data;
-      try {
-        const response = await createDataset(sessionId, payload);
-        await uploadFiles(response.data.id, files);
-        reload();
-        setDialogOpen(false);
-      } catch (error) {
-        console.log('Failed creating dataset.');
-      }
+    (data) => {
+      dispatch(Datasets.create(data));
+      setDialogOpen(false);
     },
-    [sessionId, reload]
+    [dispatch]
   );
 
   const handleDeleteDatasets = useCallback(
-    async () => {
-      for (let each of datasetsToDelete) {
-        try {
-          await deleteDataset(each.id);
-        } catch (error) {
-          console.log('Failed deleting dataset: ', each.id);
-        }
-      }
+    () => {
+      datasetsToDelete.forEach(each => dispatch(Datasets.destroy(each.id)));
       closeAlert();
-      reload();
     },
-    [reload, datasetsToDelete]
+    [datasetsToDelete, dispatch]
   );
 
   const openAlert = (data) => {
@@ -69,23 +60,18 @@ function SessionDetail ({ match }) {
     setDialogOpen(false);
   };
 
-  if (isLoading) {
-    return (
-      <Container>
-        <Loading />
-      </Container>
-    );
+  if (!session) {
+    return;
   }
 
   return (
     <Container>
-      <Typography variant='h5'>{session.title || 'Loading...'}</Typography>
+      <Typography variant='h5'>{session.title}</Typography>
       <Typography variant='subtitle1' gutterBottom>
         {session.date ? moment(session.date).format('LL') : '-'}
       </Typography>
       <DatasetTable
-        datasets={session.datasets}
-        isLoading={isLoading}
+        datasets={datasets}
         onAdd={openDialog}
         onDelete={openAlert}
       />

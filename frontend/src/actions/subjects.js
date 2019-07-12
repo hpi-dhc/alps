@@ -1,31 +1,19 @@
 import {
-  SUBJECT_FAILURE,
+  SUBJECT_GET_REQUEST,
   SUBJECT_LIST_REQUEST,
-  SUBJECT_LIST_SUCCESS,
   SUBJECT_CREATE_REQUEST,
-  SUBJECT_CREATE_SUCCESS
-} from '../constants/ActionTypes'
+} from '../constants/ActionTypes';
 
-export const subjectsError = (message) => ({
-  type: SUBJECT_FAILURE,
-  message
-})
+export const list = () => ({
+  type: SUBJECT_LIST_REQUEST,
+});
 
-export const requestSubjects = () => ({
-  type: SUBJECT_LIST_REQUEST
-})
+export const get = (id) => ({
+  type: SUBJECT_GET_REQUEST,
+  id,
+});
 
-export const receiveSubjects = (payload) => ({
-  type: SUBJECT_LIST_SUCCESS,
-  payload
-})
-
-export const createSubject = (payload) => ({
+export const create = (payload) => ({
   type: SUBJECT_CREATE_REQUEST,
-  payload
-})
-
-export const receiveCreatedSubject = (payload) => ({
-  type: SUBJECT_CREATE_SUCCESS,
-  payload
-})
+  payload,
+});

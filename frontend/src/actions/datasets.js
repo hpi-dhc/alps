@@ -1,32 +1,32 @@
 import {
-  DATASET_LIST_REQUEST,
-  DATASET_LIST_SUCCESS,
+  DATASET_GET_REQUEST,
   DATASET_CREATE_REQUEST,
-  DATASET_CREATE_SUCCESS,
-  DATASET_FAILURE
-} from '../constants/ActionTypes'
+  DATASET_START_POLLING,
+  DATASET_STOP_POLLING,
+  DATASET_DESTROY_REQUEST,
+} from '../constants/ActionTypes';
 
-export const requestDatasetList = (sessionId) => ({
-  type: DATASET_LIST_REQUEST,
-  sessionId
-})
+export const get = (id) => ({
+  type: DATASET_GET_REQUEST,
+  id,
+});
 
-export const receiveDatasetList = (payload) => ({
-  type: DATASET_LIST_SUCCESS,
-  payload
-})
-
-export const createDataset = (payload) => ({
+export const create = (payload) => ({
   type: DATASET_CREATE_REQUEST,
-  payload
-})
+  payload,
+});
 
-export const receiveCreatedDataset = (payload) => ({
-  type: DATASET_CREATE_SUCCESS,
-  payload
-})
+export const destroy = (id) => ({
+  type: DATASET_DESTROY_REQUEST,
+  id,
+});
 
-export const datasetError = (message) => ({
-  type: DATASET_FAILURE,
-  message
-})
+export const startPolling = (id) => ({
+  type: DATASET_START_POLLING,
+  id,
+});
+
+export const stopPolling = (id) => ({
+  type: DATASET_STOP_POLLING,
+  id,
+});

@@ -24,7 +24,7 @@ class SourceList(generics.ListAPIView):
 
 
 class SubjectListCreate(generics.ListCreateAPIView):
-    serializer_class = serializers.SubjectSerializer
+    serializer_class = serializers.SubjectListSerializer
 
     def get_queryset(self):
         return Subject.objects.filter(user=self.request.user)

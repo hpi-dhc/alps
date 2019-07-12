@@ -1,15 +1,15 @@
 import { apiEndpoint, useDataApi } from '.';
 
-const url = 'datasets/';
-const sessionUrl = 'sessions/';
-const filesUrl = 'files/';
-
-export const createDataset = (session, data) => {
-  return apiEndpoint.post(`${sessionUrl}${session}/${url}`, data);
+export const get = (id) => {
+  return apiEndpoint.get(`datasets/${id}/`);
 };
 
-export const deleteDataset = (id) => {
-  return apiEndpoint.delete(`${url}${id}/`);
+export const create = (session, data) => {
+  return apiEndpoint.post(`sessions/${session}/datasets/`, data);
+};
+
+export const destroy = (id) => {
+  return apiEndpoint.delete(`datasets/${id}/`);
 };
 
 export const uploadFiles = (dataset, files) => {
@@ -21,7 +21,7 @@ export const uploadFiles = (dataset, files) => {
     metadata[key] = rest;
   }
   formData.set('JSON', JSON.stringify(metadata));
-  return apiEndpoint.post(`${url}${dataset}/${filesUrl}`, formData);
+  return apiEndpoint.post(`datasets/${dataset}/files/`, formData);
 };
 
 export const useDataset = (id) => {

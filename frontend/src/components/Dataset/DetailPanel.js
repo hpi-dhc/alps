@@ -1,6 +1,7 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import moment from 'moment'
+import React from 'react';
+import PropTypes from 'prop-types';
+import { useSelector } from 'react-redux';
+import moment from 'moment';
 import {
   Table,
   TableHead,
@@ -9,20 +10,31 @@ import {
   TableCell,
   makeStyles,
   Typography,
-  Grid
-} from '@material-ui/core'
+  Grid,
+} from '@material-ui/core';
+import { getSignals, getRawFiles } from '../../selectors/data';
 
 const useStyles = makeStyles(theme => ({
   container: {
-    padding: theme.spacing(2)
+    padding: theme.spacing(2),
   },
   item: {
-    flexGrow: 1
-  }
-}))
+    flexGrow: 1,
+  },
+}));
+
+DetailPanel.propTypes = {
+  dataset: PropTypes.object.isRequired,
+};
+
+DetailPanel.defaultProps = {
+  dataset: { signals: [], rawFiles: [] },
+};
 
 function DetailPanel ({ dataset }) {
-  const classes = useStyles()
+  const classes = useStyles();
+  const signals = useSelector(getSignals);
+  const rawFiles = useSelector(getRawFiles);
 
   return (
     <Grid
@@ -41,12 +53,12 @@ function DetailPanel ({ dataset }) {
           </TableHead>
           <TableBody>
             {dataset.signals.map(each => (
-              <TableRow key={each.id}>
+              <TableRow key={each}>
                 <TableCell component='th' scope='row'>
-                  {each.name}
+                  {signals[each].name}
                 </TableCell>
                 <TableCell align='right'>
-                  {each.type}
+                  {signals[each].type}
                 </TableCell>
               </TableRow>
             ))}
@@ -63,14 +75,14 @@ function DetailPanel ({ dataset }) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {dataset.raw_files.map(each => (
-              <TableRow key={each.id}>
+            {dataset.rawFiles.map(each => (
+              <TableRow key={each}>
                 <TableCell component='th' scope='row'>
-                  {each.name}
+                  {rawFiles[each].name}
                 </TableCell>
                 <TableCell align='right'>
-                  {each.timestamp &&
-                    moment(each.timestamp).format('LLL')
+                  {rawFiles[each].timestamp &&
+                    moment(rawFiles[each].timestamp).format('LLL')
                   }
                 </TableCell>
               </TableRow>
@@ -79,11 +91,7 @@ function DetailPanel ({ dataset }) {
         </Table>
       </Grid>
     </Grid>
-  )
+  );
 }
 
-DetailPanel.propTypes = {
-  dataset: PropTypes.object.isRequired
-}
-
-export default DetailPanel
+export default DetailPanel;

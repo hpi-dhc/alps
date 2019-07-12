@@ -1,9 +1,9 @@
 import {
-  APP_SET_TITLE
+  APP_SET_TITLE,
 } from '../constants/ActionTypes';
 
 const initialState = {
-  title: ''
+  title: '',
 };
 
 const app = (state = initialState, action) => {
@@ -11,7 +11,7 @@ const app = (state = initialState, action) => {
     case APP_SET_TITLE:
       return {
         ...state,
-        title: action.title
+        title: action.title,
       };
     default:
       return state;

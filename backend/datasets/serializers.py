@@ -32,12 +32,8 @@ class DatasetSerializer(serializers.ModelSerializer):
         exclude = ('user',)
 
 
-class DatasetReadSerializer(DatasetSerializer):
-    source = serializers.StringRelatedField()
-
-
 class SessionDetailSerializer(serializers.ModelSerializer):
-    datasets = DatasetReadSerializer(many=True, read_only=True)
+    datasets = DatasetSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Session
@@ -46,14 +42,23 @@ class SessionDetailSerializer(serializers.ModelSerializer):
 
 
 class SessionListCreateSerializer(serializers.ModelSerializer):
+    datasets = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
         model = models.Session
         exclude = ('user',)
 
 
-class SubjectSerializer(serializers.ModelSerializer):
+class SubjectListSerializer(serializers.ModelSerializer):
     sessions = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
+    class Meta:
+        model = models.Subject
+        exclude = ('user',)
+
+
+class SubjectSerializer(serializers.ModelSerializer):
+    sessions = SessionListCreateSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Subject

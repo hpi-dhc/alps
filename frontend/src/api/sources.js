@@ -2,7 +2,7 @@ import { apiEndpoint, useDataApi } from '.';
 
 const url = 'sources/';
 
-export const requestSources = (id) => {
+export const list = () => {
   return apiEndpoint.get(url);
 };
 

@@ -1,32 +1,20 @@
 import {
   SESSION_GET_REQUEST,
-  SESSION_GET_SUCCESS,
-  SESSION_FAILURE,
   SESSION_CREATE_REQUEST,
-  SESSION_CREATE_SUCCESS
-} from '../constants/ActionTypes'
+  SESSION_DESTROY_REQUEST,
+} from '../constants/ActionTypes';
 
-export const requestSession = (id) => ({
+export const get = (id) => ({
   type: SESSION_GET_REQUEST,
-  id
-})
+  id,
+});
 
-export const receiveSession = (payload) => ({
-  type: SESSION_GET_SUCCESS,
-  payload
-})
-
-export const sessionError = (message) => ({
-  type: SESSION_FAILURE,
-  message
-})
-
-export const createSession = (payload) => ({
+export const create = (payload) => ({
   type: SESSION_CREATE_REQUEST,
-  payload
-})
+  payload,
+});
 
-export const receiveCreatedSession = (payload) => ({
-  type: SESSION_CREATE_SUCCESS,
-  payload
-})
+export const destroy = (id) => ({
+  type: SESSION_DESTROY_REQUEST,
+  id,
+});

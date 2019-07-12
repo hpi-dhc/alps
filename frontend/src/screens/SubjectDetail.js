@@ -1,37 +1,38 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import { useSelector, useDispatch } from 'react-redux';
 import SessionTable from '../components/Session/Table';
 import SessionCreateDialog from '../components/Session/CreateDialog';
-import { useAppBarTitle } from '../components/Common/AppBar';
-import { Container } from '@material-ui/core';
-import { useSubjects } from '../api/subjects';
-import { useSessionsOfSubject, deleteSession } from '../api/sessions';
+import { Container, Typography } from '@material-ui/core';
+import { getSessionsArrayBySubject, getSubjects } from '../selectors/data';
+import * as Subjects from '../actions/subjects';
+import * as Sessions from '../actions/sessions';
+import Alert from '../components/Common/Alert';
 
 function SubjectDetail ({ match, history }) {
+  const dispatch = useDispatch();
   const subjectId = match.params.subjectId;
   const [ isDialogOpen, setDialogOpen ] = useState(false);
+  const [ isAlertOpen, setAlertOpen ] = useState(false);
+  const [ sessionsToDelete, setSessionsToDelete ] = useState([]);
 
-  const { data: subject } = useSubjects(subjectId);
-  const { data: sessions, isLoading, reload } = useSessionsOfSubject(subjectId);
+  const subject = useSelector(getSubjects)[subjectId];
+  const sessions = useSelector(getSessionsArrayBySubject)[subjectId];
 
-  useAppBarTitle(subject.identifier);
+  useEffect(() => {
+    dispatch(Subjects.get(subjectId));
+  }, [dispatch, subjectId]);
 
   const handleSessionClick = (_, session) => {
     history.push(`/sessions/${session.id}`);
   };
 
   const handleDeleteSessions = useCallback(
-    async (sessions) => {
-      for (let each of sessions) {
-        try {
-          await deleteSession(each.id);
-        } catch (error) {
-          console.log('Failed deleteing session', each.id);
-        }
-      }
-      reload();
+    () => {
+      sessionsToDelete.forEach(each => dispatch(Sessions.destroy(each.id)));
+      closeAlert();
     },
-    [reload]
+    [sessionsToDelete, dispatch]
   );
 
   const handleNewSession = () => {
@@ -42,19 +43,40 @@ function SubjectDetail ({ match, history }) {
     setDialogOpen(false);
   };
 
+  const openAlert = (data) => {
+    setSessionsToDelete(data);
+    setAlertOpen(true);
+  };
+
+  const closeAlert = () => {
+    setAlertOpen(false);
+  };
+
+  if (!subject) {
+    return <div />;
+  }
+
   return (
     <Container>
+      <Typography gutterBottom variant='h5'>{subject.identifier}</Typography>
       <SessionTable
         sessions={sessions}
-        isLoading={isLoading}
         onAdd={handleNewSession}
-        onDelete={handleDeleteSessions}
+        onDelete={openAlert}
         onRowClick={handleSessionClick}
       />
       <SessionCreateDialog
         open={isDialogOpen}
         onCancel={handleCloseDialog}
         subject={subjectId}
+      />
+      <Alert
+        open={isAlertOpen}
+        title='Delete sessions'
+        message='Do you really want to delete the selected sessions? This cannot be undone.'
+        confirmText='Delete'
+        onConfirm={handleDeleteSessions}
+        onCancel={closeAlert}
       />
     </Container>
   );

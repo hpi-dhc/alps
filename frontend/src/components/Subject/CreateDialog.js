@@ -1,74 +1,58 @@
-import React, { PureComponent } from 'react'
-import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
+import React, { useCallback, useState } from 'react';
+import PropTypes from 'prop-types';
+import { useDispatch } from 'react-redux';
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Button,
-  TextField
-} from '@material-ui/core'
-import { createSubject } from '../../actions/subjects'
+  TextField,
+} from '@material-ui/core';
+import { create } from '../../actions/subjects';
 
-class SubjectCreateDialog extends PureComponent {
-  static propTypes = {
-    open: PropTypes.bool.isRequired,
-    onCancel: PropTypes.func.isRequired,
-    onSave: PropTypes.func.isRequired
-  }
+SubjectCreateDialog.propTypes = {
+  open: PropTypes.bool.isRequired,
+  onCancel: PropTypes.func.isRequired,
+};
 
-  state = {
-    identifier: ''
-  }
+function SubjectCreateDialog ({ open, onCancel }) {
+  const [identifier, setIdentifier] = useState('');
+  const dispatch = useDispatch();
 
-  handleCancel = (event) => {
-    this.props.onCancel()
-  }
+  const handleCancel = onCancel;
 
-  handleSave = (event) => {
-    event.preventDefault()
-    this.props.onSave(this.state.identifier)
-    this.props.onCancel()
-  }
+  const handleSave = useCallback((event) => {
+    event.preventDefault();
+    dispatch(create(identifier));
+    onCancel();
+  }, [dispatch, identifier, onCancel]);
 
-  handleInputChange = (event) => {
-    this.setState({ identifier: event.currentTarget.value })
-  }
+  const handleInputChange = (event) => {
+    setIdentifier(event.currentTarget.value);
+  };
 
-  render () {
-    return (
-      <Dialog open={this.props.open} fullWidth>
-        <DialogTitle>Create Subject</DialogTitle>
-        <form onSubmit={this.handleSave}>
-          <DialogContent root={{ display: 'flex', flexWrap: 'wrap' }}>
-            <TextField
-              autoFocus
-              label='Identifier'
-              id='identifier'
-              onChange={this.handleInputChange}
-              fullWidth
-              required
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={this.handleCancel}>Cancel</Button>
-            <Button type='submit' color='secondary'>Save</Button>
-          </DialogActions>
-        </form>
-      </Dialog>
-    )
-  }
+  return (
+    <Dialog open={open} fullWidth>
+      <DialogTitle>Create Subject</DialogTitle>
+      <form onSubmit={handleSave}>
+        <DialogContent root={{ display: 'flex', flexWrap: 'wrap' }}>
+          <TextField
+            autoFocus
+            label='Identifier'
+            id='identifier'
+            onChange={handleInputChange}
+            fullWidth
+            required
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancel}>Cancel</Button>
+          <Button type='submit' color='secondary'>Save</Button>
+        </DialogActions>
+      </form>
+    </Dialog>
+  );
 }
 
-const mapStateToProps = (state) => {
-  return {}
-}
-
-const mapDispatchToProps = (dispatch) => {
-  return {
-    onSave: (identifier) => dispatch(createSubject({ identifier }))
-  }
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(SubjectCreateDialog)
+export default SubjectCreateDialog;

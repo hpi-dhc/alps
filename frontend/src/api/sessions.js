@@ -1,18 +1,22 @@
 import { apiEndpoint, useDataApi } from '.';
 
-const url = 'sessions/';
-const subjectUrl = 'subjects/';
-
-export const requestSession = (id) => {
-  return apiEndpoint.get(`${url}${id}/`);
+export const get = (id) => {
+  return apiEndpoint.get(`sessions/${id}/`);
 };
 
-export const createSession = (subject, data) => {
-  return apiEndpoint.post(`${subjectUrl}${subject}/${url}`, data);
+export const list = (subjectId) => {
+  if (subjectId) {
+    return apiEndpoint.get(`subjects/${subjectId}/sessions/`);
+  }
+  return apiEndpoint.get('sessions/');
 };
 
-export const deleteSession = (id) => {
-  return apiEndpoint.delete(`${url}${id}`);
+export const create = (subjectId, data) => {
+  return apiEndpoint.post(`subjects/${subjectId}/sessions/`, data);
+};
+
+export const destroy = (id) => {
+  return apiEndpoint.delete(`sessions/${id}`);
 };
 
 export const useSession = (id) => {

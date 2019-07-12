@@ -6,7 +6,7 @@ import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import ErrorIcon from '@material-ui/icons/Error';
 import { useDataset } from '../../api/datasets';
 
-const PROCESS_STATUS = {
+export const PROCESS_STATUS = {
   QUEUED: 'UP',
   PROCESSING: 'PR',
   PROCESSED: 'PD',

@@ -1,43 +1,28 @@
-import React, { useCallback, useEffect } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
-import { connect, useDispatch } from 'react-redux';
+import { connect } from 'react-redux';
 import { Link, withRouter } from 'react-router-dom';
 
-import { withStyles } from '@material-ui/core/styles';
-import { Divider } from '@material-ui/core';
-import AppBarMUI from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
-import IconButton from '@material-ui/core/IconButton';
-import HeartIcon from '@material-ui/icons/Timeline';
+import {
+  withStyles,
+  AppBar as AppBarMUI,
+  Toolbar,
+  Typography,
+  Menu,
+  MenuItem,
+  IconButton,
+} from '@material-ui/core';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 import SettingsIcon from '@material-ui/icons/Settings';
-import ArrowBackIcon from '@material-ui/icons/ArrowBack';
+import HeartIcon from '@material-ui/icons/Timeline';
 
+import Breadcrumb from './Breadcrumb';
 import { requestLogout } from '../../actions/authentication';
-import { setAppTitle } from '../../actions/app';
-import { getAppTitle } from '../../selectors/app';
 
-export function useAppBarTitle (title) {
-  const dispatch = useDispatch();
-  const setTitle = useCallback(
-    (title) => dispatch(setAppTitle(title)),
-    [dispatch]
-  );
-
-  useEffect(() => {
-    setTitle(title);
-  }, [setTitle, title]);
-}
-
-class AppBar extends React.Component {
+class AppBar extends React.PureComponent {
   static propTypes = {
     classes: PropTypes.object.isRequired,
-    history: PropTypes.object.isRequired,
     handleLogout: PropTypes.func.isRequired,
-    title: PropTypes.string,
     children: PropTypes.node,
   }
 
@@ -55,10 +40,10 @@ class AppBar extends React.Component {
 
   render () {
     const { anchorEl } = this.state;
-    const { children, classes, handleLogout, history, title } = this.props;
+    const { children, classes, handleLogout } = this.props;
 
     return (
-      <AppBarMUI position='absolute'>
+      <AppBarMUI position='sticky' className={classes.appBar}>
         <Toolbar>
           <Link className={classes.titleLink} to='/'>
             <HeartIcon className={classes.icon} />
@@ -71,12 +56,7 @@ class AppBar extends React.Component {
               HRV
             </Typography>
           </Link>
-          { !!title &&
-            <IconButton color='inherit' onClick={history.goBack}>
-              <ArrowBackIcon />
-            </IconButton>
-          }
-          <Typography className={classes.breadcrumbs} noWrap>{title}</Typography>
+          <Breadcrumb />
           <IconButton disabled color='inherit' onClick={this.handleClick}>
             <SettingsIcon />
           </IconButton>
@@ -93,7 +73,6 @@ class AppBar extends React.Component {
             <MenuItem onClick={handleLogout}>Logout</MenuItem>
           </Menu>
         </Toolbar>
-        {children && <Divider />}
         {children}
       </AppBarMUI>
     );
@@ -105,6 +84,9 @@ const styles = theme => ({
     fontSize: 48,
     opacity: 0.54,
   },
+  appBar: {
+    zIndex: theme.zIndex.drawer + 1,
+  },
   title: {
     marginLeft: theme.spacing(1),
     marginRight: theme.spacing(2),
@@ -114,9 +96,6 @@ const styles = theme => ({
     alignItems: 'center',
     textDecoration: 'none',
     color: theme.palette.primary.contrastText,
-  },
-  breadcrumbs: {
-    flexGrow: 1,
   },
   toolbarIcon: {
     display: 'flex',
@@ -128,9 +107,7 @@ const styles = theme => ({
 });
 
 const mapStateToProps = (state) => {
-  return {
-    title: getAppTitle(state),
-  };
+  return {};
 };
 
 const mapDispatchToProps = (dispatch) => {

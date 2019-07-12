@@ -2,15 +2,19 @@ import { apiEndpoint, useDataApi } from '.';
 
 const url = 'subjects/';
 
-export const requestSubjects = () => {
+export const get = (id) => {
+  return apiEndpoint.get(url + id);
+};
+
+export const list = () => {
   return apiEndpoint.get(url);
 };
 
-export const createSubject = (data) => {
+export const create = (data) => {
   return apiEndpoint.post(url, data);
 };
 
-export const deleteSubject = (id) => {
+export const destroy = (id) => {
   return apiEndpoint.delete(url + id);
 };
 

@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch } from 'react-redux';
 import moment from 'moment';
@@ -34,6 +34,7 @@ const useStyles = makeStyles(theme => ({
     paddingBottom: '0 !important',
   },
   progressBar: {
+    height: 4,
     marginBottom: -4,
   },
 }));
@@ -76,7 +77,10 @@ function SignalCard ({ datasets, signals, onChange, onClose, plot, plotProps, ..
     let filteredSignals = [];
 
     if (plot.dataset && datasets[plot.dataset]) {
-      filteredSignals = datasets[plot.dataset].signals.map(each => signals[each]);
+      const dataset = datasets[plot.dataset];
+      filteredSignals = dataset.signals.map(each => {
+        return signals[each];
+      });
     }
 
     return (
