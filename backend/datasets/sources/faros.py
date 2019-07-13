@@ -5,7 +5,7 @@ import pyedflib
 from datetime import datetime
 
 from datasets.constants import signal_types
-from datasets.utils import create_df
+from datasets.utils import create_series
 from datasets.sources.source_base import SourceBase
 
 class FarosSource(SourceBase):
@@ -32,40 +32,52 @@ class FarosSource(SourceBase):
         ]
 
     def parse(self):
-        signal_names =  ['ECG', 'HRV', 'Accelerometer_X', 'Accelerometer_Y', 'Accelerometer_Z', 'Accelerometer_MAG']
+        dtypes = {
+            'ECG': np.int16,
+            'HRV': pd.UInt16Dtype, # allows for NaN values
+            'Accelerometer_X': np.int16,
+            'Accelerometer_Y': np.int16,
+            'Accelerometer_Z': np.int16,
+        }
         raw_file = self.raw_files[0]
 
         with pyedflib.EdfReader(raw_file.path.path) as f:
-            # read EDF file into a dictionary, keys: signal_labels
-            n = f.signals_in_file    # get num of signal types
             signal_labels = f.getSignalLabels()   # get labels for types of signals
-            raw_sample_freqs = f.getSampleFrequencies()
+            sample_freqs = f.getSampleFrequencies()
             start_ts = (f.getStartdatetime() - datetime.fromtimestamp(0)).total_seconds()
 
-            raw_data = dict.fromkeys(signal_labels)   # the signals has difference sizes, therefore put into a dictionary
-            for i in np.arange(n):
-                raw_data[signal_labels[i]] = f.readSignal(i)
+            data = dict.fromkeys(dtypes)   # the signals has difference sizes, therefore put into a dictionary
+            for index, label in enumerate(signal_labels):
+                if label =='Accelerometer_X':
+                    freq_acc = sample_freqs[index]
+                if label in dtypes.keys():
+                    data[label] = create_series(
+                        name=label,
+                        data=f.readSignal(index),
+                        start_time=start_ts,
+                        freq=sample_freqs[index],
+                        dtype=dtypes[label]
+                    )
 
-        raw_data['Accelerometer_MAG'] = np.linalg.norm([raw_data['Accelerometer_X'], raw_data['Accelerometer_Y'], raw_data['Accelerometer_Z']], axis=0)
+        data['Accelerometer_MAG'] = create_series(
+            name='Accelerometer_MAG',
+            data=np.linalg.norm([data['Accelerometer_X'], data['Accelerometer_Y'], data['Accelerometer_Z']], axis=0),
+            start_time=start_ts,
+            freq=freq_acc
+        )
 
-        sample_freqs = {}
-        for i in range(len(signal_labels)):
-            sample_freqs[signal_labels[i]] = raw_sample_freqs[i]
-        sample_freqs['Accelerometer_MAG'] = sample_freqs['Accelerometer_X']
-        start_timestamps = {}
-        for name in signal_names:
-            start_timestamps[name] = start_ts
+        data['HRV'].replace(0, None, inplace=True)
 
-        data = create_df(signal_names, raw_data, sample_freqs, start_timestamps)
-        data = data.tz_localize('UTC', copy=False)
+        for label in data.keys():
+            data[label] = data[label].tz_localize('UTC', copy=False)
 
         result = {
-            column: {
+            signal: {
                 'raw_file_id': raw_file.id,
-                'series': data[column]
+                'series': data[signal]
             }
-            for column
-            in data.columns
+            for signal
+            in data.keys()
         }
         for key, value in self.COLUMN_TO_TYPE.items():
             result[key]['type'] = value

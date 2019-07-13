@@ -1,5 +1,6 @@
 import operator
 import pandas as pd
+import numpy as np
 from datetime import datetime
 
 def raw_file_path(instance, filename):
@@ -26,6 +27,24 @@ def search_dict(dict, search_for):
         if value == search_for:
             return key
     return None
+
+
+def create_series(name, data, start_time, freq, dtype=None):
+    if not dtype and hasattr(data, 'dtype'):
+        dtype = data.dtype
+
+    index = pd.date_range(
+        start=pd.to_datetime(start_time, unit='s'),
+        periods=len(data),
+        freq='{}N'.format(int(1e9 / freq))
+    )
+
+    return pd.Series(
+        name=name,
+        data=data,
+        index=index,
+        dtype=dtype
+    )
 
 def create_df(signal_names, signals, sample_freqs, start_timestamps):
     base_freq_key = max(sample_freqs.items(), key=operator.itemgetter(1))[0]
