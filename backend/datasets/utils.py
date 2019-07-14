@@ -1,3 +1,4 @@
+import os
 import operator
 import pandas as pd
 import numpy as np
@@ -28,6 +29,8 @@ def search_dict(dict, search_for):
             return key
     return None
 
+def is_non_zero_file(path):
+    return os.path.isfile(path) and os.path.getsize(path) > 0
 
 def create_series(name, data, start_time, freq, dtype=None):
     if not dtype and hasattr(data, 'dtype'):
