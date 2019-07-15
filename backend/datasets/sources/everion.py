@@ -26,68 +26,62 @@ class EverionSource(SourceBase):
     }
 
     SIGNAL_TAGS = {
-        6: 'heart_rate',
-        7: 'oxygen_saturation',
-        8: 'perfusion_index',
-        9: 'motion_activity',
-        10: 'activity_classification',
-        11: 'heart_rate_variability',
-        12: 'respiration_rate',
-        13: 'energy',
-        15: 'ctemp',
-        19: 'temperature_local',
-        20: 'barometer_pressure',
-        21: 'gsr_electrode',
-        22: 'health_score',
-        23: 'relax_stress_intensity_score',
-        24: 'sleep_quality_index_score',
-        25: 'training_effect_score',
-        26: 'activity_score',
-        66: 'richness_score',
-        68: 'heart_rate_quality',
-        69: 'oxygen_saturation_quality',
-        70: 'blood_pulse_wave',
-        71: 'number_of_steps',
-        72: 'activity_classification_quality',
-        73: 'energy_quality',
-        74: 'heart_rate_variability_quality',
-        75: 'respiration_rate_quality',
-        76: 'ctemp_quality',
-        118: 'temperature_object',
-        119: 'temperature_barometer',
-        133: 'perfusion_index_quality',
-        134: 'blood_pulse_wave_quality'
+        6: ['heart_rate'],
+        7: ['oxygen_saturation'],
+        #8: ['perfusion_index'],
+        #9: ['motion_activity'],
+        #10: ['activity_classification'],
+        11: ['heart_rate_variability', 'heart_rate_variability_quality'],
+        12: ['respiration_rate'],
+        #13: ['energy'],
+        15: ['ctemp'],
+        19: ['temperature_local'],
+        20: ['barometer_pressure'],
+        21: ['gsr_electrode'],
+        #22: ['health_score'],
+        #23: ['relax_stress_intensity_score'],
+        #24: ['sleep_quality_index_score'],
+        #25: ['training_effect_score'],
+        #26: ['activity_score'],
+        #66: ['richness_score'],
+        #68: ['heart_rate_quality'],
+        #69: ['oxygen_saturation_quality'],
+        70: ['blood_pulse_wave', 'blood_pulse_wave_quality'],
+        #71: ['number_of_steps'],
+        #72: ['activity_classification_quality'],
+        #73: ['energy_quality'],
+        #74: ['heart_rate_variability_quality'],
+        #75: ['respiration_rate_quality'],
+        #76: ['ctemp_quality'],
+        118: ['temperature_object'],
+        119: ['temperature_barometer'],
+        #133: ['perfusion_index_quality'],
+        #134: ['blood_pulse_wave_quality']
     }
 
     SENSOR_TAGS = {
-        80: 'led1_data',
-        81: 'led2_data',
-        82: 'led3_data',
-        83: 'led4_data',
-        84: 'accx_data',
-        85: 'accy_data',
-        86: 'accz_data',
-        88: 'led2_current',
-        89: 'led3_current',
-        90: 'led4_current',
-        91: 'current_offset',
-        92: 'compressed_data'
+        80: ['led1_data'],
+        81: ['led2_data'],
+        82: ['led3_data'],
+        83: ['led4_data'],
+        84: ['accx_data'],
+        85: ['accy_data'],
+        86: ['accz_data'],
+        #88: ['led2_current'],
+        #89: ['led3_current'],
+        #90: ['led4_current'],
+        #91: ['current_offset'],
+        #92: ['compressed_data']
     }
 
     FEATURE_TAGS = {
-        14: 'inter_pulse_interval',
-        17: 'pis',
-        18: 'pid',
-        77: 'inter_pulse_deviation',
-        78: 'pis_quality',
-        79: 'pid_quality'
+        14: ['inter_pulse_interval', 'inter_pulse_interval_deviation'],
+        #17: ['pis'],
+        #18: ['pid'],
+        #77: ['inter_pulse_deviation'],
+        #78: ['pis_quality'],
+        #79: ['pid_quality']
     }
-
-    ACC_NAMES = ['accx_data', 'accy_data', 'accz_data']
-
-    selected_signal_tags = [6, 7, 11, 12, 15, 19, 20, 21, 118, 119]
-    selected_sensor_tags = [80, 81, 82, 83, 84, 85, 86]
-    selected_feature_tags = [14]
 
     @classmethod
     def name(cls):
@@ -119,150 +113,134 @@ class EverionSource(SourceBase):
             },
         ]
 
-    def parse(self):
-        self.result = {}
+    @staticmethod
+    def extend_values(df, dtype='float64'):
+        values_extended = df['values'].str.extract(r'(?P<value>[\d.]+);?(?P<value2>[\d.]+)?') \
+            .astype({ 'value': dtype, 'value2': dtype }, copy=False)
+        df_extended = pd.concat([df, values_extended], axis=1)
+        df_extended.drop(columns='values', inplace=True)
+        return df_extended
 
-        data_signals = self.read_signals()
-        data_sensors = self.read_sensors()
-        data_features = self.read_features()
+    @staticmethod
+    def get_dataframe_iterator(path, cols=['count', 'tag', 'time', 'values']):
+        parse_dates = ['time'] if 'time' in cols else None
+        return pd.read_csv(
+            path,
+            usecols=cols,
+            dtype={
+                'count': 'uint32',
+                'streamType': 'int8',
+                'tag': 'int8',
+                'values': 'object'
+            },
+            parse_dates=parse_dates,
+            date_parser=lambda x: pd.to_datetime(x, unit='s', utc=True),
+            engine='c',
+            memory_map=True,
+            chunksize=100000
+        )
 
-        return self.result
+    @classmethod
+    def create_time_lookup(cls, path):
+        df = pd.DataFrame()
+        df_iterator = cls.get_dataframe_iterator(path, ['tag', 'count', 'time'])
 
-    def read_signals(self):
-        signals_file = self.get_file('signals')
-        if signals_file is None:
-            return
+        # append data from csv in chunks and drop duplicates
+        for chunk in df_iterator:
+            chunk.drop_duplicates(inplace=True)
+            df = pd.concat([df, chunk])
 
-        raw_signals = pd.read_csv(signals_file.path.path)
-        raw_signals.drop_duplicates(inplace=True)
+        df.drop_duplicates(inplace=True)
+        group_by = ['time', 'tag']
+        grouped = df[['tag', 'count', 'time']].groupby(['time', 'tag'])
 
-        data = pd.DataFrame()
-        for tag in np.sort(raw_signals['tag'].unique()):
-            if tag not in self.selected_signal_tags:
-                continue
-            tag_name = self.SIGNAL_TAGS[tag]
-            sub_df = raw_signals[raw_signals['tag']==tag]
-            columns_to_join = [tag_name]
-            # Check if signal includes quality value
-            if sub_df.loc[sub_df.first_valid_index(), 'values'].find(';') != -1:
-                quality_name = '{}_quality'.format(tag_name)
-                columns_to_join = columns_to_join + [quality_name]
-                sub_df.loc[:, quality_name] = sub_df['values'].apply(lambda val: val[val.find(';')+1:]).astype(float)
-                sub_df.loc[:, tag_name] = sub_df['values'].apply(lambda val: val[:val.find(';')]).astype(float)
-            else:
-                sub_df.loc[:, tag_name] = sub_df['values'].astype(float)
-            sub_df.loc[:, 'time'] = pd.to_datetime(sub_df.loc[:, 'time'], unit='s')
-            if sub_df.empty or (sub_df[tag_name]==0).all():
-                continue
-            sub_df.set_index('time', inplace=True, verify_integrity=True)
-            sub_df.sort_index(inplace=True)
-            data = data.join(sub_df[columns_to_join], how='outer')
+        if (grouped.count()['count'] > 1).any():
+            count_max = grouped.max()
+            count_max.reset_index(inplace=True)
+            count_max.rename({ 'count': 'max' }, axis='columns', inplace=True)
+            count_min = grouped.min()
+            count_min.reset_index(inplace=True)
+            count_min.rename({ 'count': 'min' }, axis='columns', inplace=True)
 
-        data.tz_localize('UTC', copy=False)
+            df = df.merge(count_max, left_on=group_by, right_on=group_by)
+            df = df.merge(count_min, left_on=group_by, right_on=group_by)
 
-        self.write_result(data, signals_file)
+            df['n'] = df['max'] - df['min'] + 1
+            df['index'] = df['count'] - df['min']
+            df['time'] = df['time'] + pd.to_timedelta(df['index'] / df['n'], unit='s')
 
-        return data
+        return df[['tag', 'count', 'time']]
 
-    def read_sensors(self):
-        sensors_file = self.get_file('sensors')
-        if sensors_file is None:
-            return
-
-        raw_sensors = pd.read_csv(sensors_file.path.path)
-        raw_sensors.drop_duplicates(inplace=True)
-
-        min_count_dict = {}
-        count_ts_dict = {}
-        data = pd.DataFrame()
-        sub_df = raw_sensors[raw_sensors['tag']==self.selected_sensor_tags[0]]
-        for ts in raw_sensors['time'].unique():
-            min_count_dict[ts] = sub_df[sub_df['time']==ts].loc[:, 'count'].min()
-            count_ts_dict[ts] = sub_df[sub_df['time']==ts].loc[:, 'count'].max() - min_count_dict[ts] + 1
-
-        for tag in np.sort(raw_sensors['tag'].unique()):
-            if tag not in self.selected_sensor_tags:
-                continue
-            tag_name = self.SENSOR_TAGS[tag]
-            sub_df = raw_sensors[raw_sensors['tag']==tag]
-
-            sub_df.loc[:, 'time'] = pd.to_datetime(sub_df.apply(lambda x: x['time'] + (x['count'] - min_count_dict[x['time']]) / count_ts_dict[x['time']], axis=1), unit='s')
-            sub_df.loc[:, tag_name] = sub_df['values']
-            if sub_df.empty or (sub_df[tag_name]==0).all():
-                continue
-            sub_df.set_index('time', inplace=True, verify_integrity=True)
-            sub_df.sort_index(inplace=True)
-            data = data.join(sub_df[tag_name], how='outer')
-
-        if all(x in set(data.columns) for x in self.ACC_NAMES):
-            data['acc_mag'] = np.linalg.norm(data[self.ACC_NAMES], axis='1')
-
-        data.tz_localize('UTC', copy=False)
-
-        self.write_result(data, sensors_file)
-
-        return data
-
-    def read_features(self):
-        features_file = self.get_file('features')
-        if features_file is None:
-            return
-
-        raw_features = pd.read_csv(features_file.path.path)
-        raw_features.drop_duplicates(inplace=True)
-
-        min_count_dict = {}
-        count_ts_dict = {}
-        data = pd.DataFrame()
-        sub_df = raw_features[raw_features['tag']==self.selected_feature_tags[0]]
-        for ts in raw_features['time'].unique():
-            min_count_dict[ts] = sub_df[sub_df['time']==ts].loc[:, 'count'].min()
-            count_ts_dict[ts] = sub_df[sub_df['time']==ts].loc[:, 'count'].max() - min_count_dict[ts] + 1
-
-        for tag in np.sort(raw_features['tag'].unique()):
-            if tag not in self.selected_feature_tags:
-                continue
-            tag_name = self.FEATURE_TAGS[tag]
-            sub_df = raw_features[raw_features['tag']==tag]
-
-            columns_to_join = [tag_name]
-            # Check if signal includes quality value
-            if sub_df.loc[sub_df.first_valid_index(), 'values'].find(';') != -1:
-                if tag == 14: # inter pulse interval quality is given as deviation
-                    quality_name = '{}_deviation'.format(tag_name)
-                else:
-                    quality_name = '{}_quality'.format(tag_name)
-                columns_to_join = columns_to_join + [quality_name]
-                sub_df.loc[:, quality_name] = sub_df['values'].apply(lambda val: val[val.find(';')+1:]).astype(float)
-                sub_df.loc[:, tag_name] = sub_df['values'].apply(lambda val: val[:val.find(';')]).astype(float)
-            else:
-                sub_df.loc[:, tag_name] = sub_df['values'].astype(float)
-            sub_df.loc[:, 'time'] = pd.to_datetime(sub_df.apply(lambda x: x['time'] + (x['count'] - min_count_dict[x['time']]) / count_ts_dict[x['time']], axis=1), unit='s')
-            if sub_df.empty or (sub_df[tag_name]==0).all():
-                continue
-            sub_df.set_index('time', inplace=True, verify_integrity=True)
-            sub_df.sort_index(inplace=True)
-            data = data.join(sub_df[columns_to_join], how='outer')
-
-        data.tz_localize('UTC', copy=False)
-
-        self.write_result(data, features_file)
-
-        return data
-
-    def get_file(self, name):
-        for file in self.raw_files:
-            if re.match(self.FILES[name], file.name):
-                return file
+    @classmethod
+    def get_tags(cls, filename):
+        if re.match(cls.FILES['signals'], filename):
+            return cls.SIGNAL_TAGS
+        if re.match(cls.FILES['sensors'], filename):
+            return cls.SENSOR_TAGS
+        if re.match(cls.FILES['features'], filename):
+            return cls.FEATURE_TAGS
         return None
 
-    def write_result(self, data, file):
-        if type(self.result) is not dict:
-            self.result = {}
-        for column in data.columns:
-            self.result[column] = {
-                'raw_file_id': file.id,
-                'series': data[column],
+    @classmethod
+    def read_file(cls, file):
+        path = file.path.path
+        tags = cls.get_tags(file.name)
+        name_list = [name for tag in tags for name in tags[tag]]
+        result = {
+            name: pd.Series(name=name)
+            for name
+            in name_list
+        }
+
+        time_lookup = cls.create_time_lookup(path)
+        df_iterator = cls.get_dataframe_iterator(path, ['tag', 'count', 'values'])
+
+        for chunk in df_iterator:
+            chunk.drop_duplicates(inplace=True)
+            df = cls.extend_values(chunk)
+            for tag, names in tags.items():
+                df_tag = df.loc[df['tag'] == tag].drop(columns='tag').copy()
+                time_lookup_tag = time_lookup.loc[time_lookup['tag'] == tag].drop(columns='tag')
+                df_tag = df_tag.merge(time_lookup_tag, left_on='count', right_on='count')
+                df_tag.set_index('time', inplace=True)
+                result[names[0]] = result[names[0]].append(to_append=df_tag['value'])
+                if len(names) == 2:
+                    result[names[1]] = result[names[1]].append(to_append=df_tag['value2'])
+
+        for name, series in result.items():
+            series.sort_index(inplace=True)
+
+        return result
+
+    def parse(self):
+        result = {}
+
+        for file in self.raw_files:
+            series = self.read_file(file)
+            for name, data in series.items():
+                result[name] = {
+                    'series': data,
+                    'raw_file_id': file.id,
+                }
+
+        if 'accx_data' in result:
+            index = result['accx_data']['series'].index
+            data = np.linalg.norm(
+                [
+                    result['accx_data']['series'],
+                    result['accy_data']['series'],
+                    result['accz_data']['series']
+                ],
+                axis=0
+            )
+            result['acc_mag'] = {
+                'series': pd.Series(data=data, index=index, name='acc_mag')
             }
-            if column in self.COLUMN_TO_TYPE:
-                self.result[column]['type'] = self.COLUMN_TO_TYPE[column]
+
+        for name, signal_type in self.COLUMN_TO_TYPE.items():
+            if name in result:
+                result[name]['type'] = signal_type
+
+        return result
+
+
