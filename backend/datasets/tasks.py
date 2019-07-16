@@ -10,11 +10,16 @@ from datasets.models.files import SignalChunkFile
 from datasets.constants import process_status, signal_types
 
 import logging
+from celery.app.log import TaskFormatter
 logger = logging.getLogger(__name__)
+sh = logging.StreamHandler()
+sh.setFormatter(TaskFormatter('%(asctime)s - %(task_id)s - %(task_name)s - %(name)s - %(levelname)s - %(message)s'))
+logger.setLevel(logging.INFO)
+logger.addHandler(sh)
 
 CHUNK_LENGTH = 300
 
-class RawFileParserTask(Task):
+class DatasetTask(Task):
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         dataset = Dataset.objects.get(id=args[1])
@@ -54,16 +59,16 @@ def save_to_signal_file(series, signal):
 
     while lower_bound < series.index.max():
         chunk = series[(series.index >= lower_bound) & (series.index < upper_bound)]
-        file = ContentFile(chunk.to_csv(header=False))
-
-        signal_file = SignalChunkFile(
-            signal=signal,
-            first_timestamp=chunk.index.min(),
-            last_timestamp=chunk.index.max(),
-            user_id=signal.user_id,
-        )
-        signal_file.path.save(None, file)
-        signal_file.save()
+        if not chunk.empty:
+            file = ContentFile(chunk.to_csv(header=False))
+            signal_file = SignalChunkFile(
+                signal=signal,
+                first_timestamp=chunk.index.min(),
+                last_timestamp=chunk.index.max(),
+                user_id=signal.user_id,
+            )
+            signal_file.path.save(None, file)
+            signal_file.save()
 
         lower_bound = upper_bound
         upper_bound = lower_bound + pd.Timedelta(seconds=CHUNK_LENGTH)
@@ -106,7 +111,7 @@ def save_parsed_signals(dataset, signals):
     return signal_ids
 
 
-@shared_task(base=RawFileParserTask)
+@shared_task(base=DatasetTask)
 def parse_raw_files(file_ids, dataset_id):
     dataset = Dataset.objects.get(id=dataset_id)
     dataset.status = process_status.PROCESSING
