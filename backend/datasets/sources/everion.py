@@ -147,10 +147,10 @@ class EverionSource(SourceBase):
 
         # append data from csv in chunks and drop duplicates
         for chunk in df_iterator:
-            chunk.drop_duplicates(inplace=True)
+            chunk.drop_duplicates(subset=['count', 'tag'], inplace=True)
             df = pd.concat([df, chunk])
 
-        df.drop_duplicates(inplace=True)
+        df.drop_duplicates(subset=['count', 'tag'], inplace=True)
         group_by = ['time', 'tag']
         grouped = df[['tag', 'count', 'time']].groupby(['time', 'tag'])
 
@@ -196,16 +196,21 @@ class EverionSource(SourceBase):
         df_iterator = cls.get_dataframe_iterator(path, ['tag', 'count', 'values'])
 
         for chunk in df_iterator:
-            chunk.drop_duplicates(inplace=True)
+            chunk.drop_duplicates(['count', 'tag'], inplace=True)
+            chunk.sort_values('count', inplace=True)
             df = cls.extend_values(chunk)
             for tag, names in tags.items():
-                df_tag = df.loc[df['tag'] == tag].drop(columns='tag').copy()
-                time_lookup_tag = time_lookup.loc[time_lookup['tag'] == tag].drop(columns='tag')
-                df_tag = df_tag.merge(time_lookup_tag, left_on='count', right_on='count')
+                df_tag = df.loc[df['tag'] == tag]
+                time_lookup_tag = time_lookup.loc[time_lookup['tag'] == tag]
+                df_tag = df_tag.merge(
+                    time_lookup_tag,
+                    left_on=['count', 'tag'],
+                    right_on=['count', 'tag']
+                )
                 df_tag.set_index('time', inplace=True)
-                result[names[0]] = result[names[0]].append(to_append=df_tag['value'])
+                result[names[0]] = result[names[0]].combine_first(df_tag['value'])
                 if len(names) == 2:
-                    result[names[1]] = result[names[1]].append(to_append=df_tag['value2'])
+                    result[names[1]] = result[names[1]].combine_first(df_tag['value2'])
 
         for name, series in result.items():
             series.sort_index(inplace=True)

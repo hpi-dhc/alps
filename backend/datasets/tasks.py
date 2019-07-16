@@ -10,12 +10,7 @@ from datasets.models.files import SignalChunkFile
 from datasets.constants import process_status, signal_types
 
 import logging
-from celery.app.log import TaskFormatter
 logger = logging.getLogger(__name__)
-sh = logging.StreamHandler()
-sh.setFormatter(TaskFormatter('%(asctime)s - %(task_id)s - %(task_name)s - %(name)s - %(levelname)s - %(message)s'))
-logger.setLevel(logging.INFO)
-logger.addHandler(sh)
 
 CHUNK_LENGTH = 300
 
