@@ -1,3 +1,4 @@
 /.vscode
 .editorconfig
 Dockerfile
+/uploads
