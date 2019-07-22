@@ -13,12 +13,14 @@ django = "*"
 django-cors-headers = "*"
 django-rest-auth = "*"
 djangorestframework = "*"
+fastparquet = {git = "https://github.com/dask/fastparquet.git",ref = "master"}
 numpy = "*"
 pandas = "*"
 psycopg2 = "*"
+pyedflib = "*"
+python-snappy = "*"
 redis = "*"
 scipy = "*"
-pyedflib = "*"
 
 [requires]
 python_version = "3.7"

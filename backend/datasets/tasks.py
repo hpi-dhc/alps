@@ -12,7 +12,7 @@ from datasets.constants import process_status, signal_types
 import logging
 logger = logging.getLogger(__name__)
 
-CHUNK_LENGTH = 300
+CHUNK_LENGTH = 3600
 
 class DatasetTask(Task):
 
@@ -55,14 +55,13 @@ def save_to_signal_file(series, signal):
     while lower_bound < series.index.max():
         chunk = series[(series.index >= lower_bound) & (series.index < upper_bound)]
         if not chunk.empty:
-            file = ContentFile(chunk.to_csv(header=False))
             signal_file = SignalChunkFile(
                 signal=signal,
                 first_timestamp=chunk.index.min(),
                 last_timestamp=chunk.index.max(),
                 user_id=signal.user_id,
             )
-            signal_file.path.save(None, file)
+            signal_file.save_to_disk(chunk)
             signal_file.save()
 
         lower_bound = upper_bound

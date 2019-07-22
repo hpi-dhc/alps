@@ -1,10 +1,14 @@
 import os
+import io
 import pandas as pd
 from django.db import models
+from django.conf import settings
 
 from datasets.models.base import UUIDModel, OwnedModel
 from datasets.utils import raw_file_path, signal_file_path
 
+import logging
+logger = logging.getLogger(__name__)
 
 class RawFile(OwnedModel, UUIDModel):
     name = models.CharField(max_length=128)
@@ -31,10 +35,31 @@ class SignalChunkFile(OwnedModel, UUIDModel):
     )
 
     def get_samples(self, start, end):
-        df = pd.read_csv(self.path, names=['value'], index_col=0, parse_dates=True)
+        logger.debug(f'SignalChunkFile of {self.signal.name} ({self.id}) Reading data')
+        df = pd.read_parquet(self.path.path, engine='fastparquet')
         if self.first_timestamp < start or self.last_timestamp > end:
-            return df.loc[(df.index >= start) & (df.index <= end)]
+            logger.debug(f'SignalChunkFile of {self.signal.name} ({self.id}) Truncating data')
+            df = df.truncate(start, end)
         return df
+
+    def save_to_disk(self, data):
+        sub_path = signal_file_path(self, None)
+        path = os.path.join(settings.MEDIA_ROOT, sub_path)
+        self.path = sub_path
+
+        folder = path[:path.rfind('/')]
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+
+        if isinstance(data, pd.Series):
+            data = data.to_frame()
+
+        data.to_parquet(
+            path,
+            index=True,
+            engine='fastparquet',
+            compression='SNAPPY',
+        )
 
     class Meta:
         ordering = ('first_timestamp',)

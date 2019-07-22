@@ -5,7 +5,7 @@ import numpy as np
 from datetime import datetime
 
 def raw_file_path(instance, filename):
-    path = "users/{username}/{dataset}/{filename}.{ext}".format(
+    path = "{username}/{dataset}/raw/{filename}.{ext}".format(
         username=instance.user.username,
         dataset=instance.dataset_id,
         filename=instance.id,
@@ -14,12 +14,11 @@ def raw_file_path(instance, filename):
     return path
 
 def signal_file_path(instance, filename):
-    path = "users/{username}/{dataset}/{signal}/{filename}.{ext}".format(
+    path = "{username}/{dataset}/{signal}/{filename}.parquet".format(
         username=instance.user.username,
         dataset=instance.signal.dataset_id,
-        signal=instance.signal_id,
-        filename=instance.id,
-        ext="csv"
+        signal=str(instance.signal_id)[:8],
+        filename=str(instance.id)[:8],
     )
     return path
 

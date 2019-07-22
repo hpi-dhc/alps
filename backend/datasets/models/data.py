@@ -3,10 +3,13 @@ import pandas as pd
 import numpy as np
 import django.contrib.postgres.fields as postgres_fields
 from django.db import models, connections
+from django.db.models import Q
 
 from datasets.models.base import UUIDModel, OwnedModel
 from datasets.constants import signal_types, process_status
 
+import logging
+logger = logging.getLogger(__name__)
 
 class Subject(OwnedModel, UUIDModel):
     identifier = models.CharField(max_length=32)
@@ -97,16 +100,22 @@ class Signal(OwnedModel, UUIDModel):
             end = pd.Timestamp.now('UTC')
 
         if self.signal_chunk_files.count() > 0:
-            filtered_files = self.signal_chunk_files.filter(first_timestamp__lte=end, last_timestamp__gte=start)
-            chunks = [file.get_samples(start, end) for file in filtered_files]
-            if not chunks:
-                return pd.DataFrame()
-            df = pd.concat(chunks)
+            logger.debug(f'Signal {self.name} with {self.signal_chunk_files.count()} chunk files')
+            filtered_files = self.signal_chunk_files \
+                .exclude(Q(last_timestamp__lt=start) | Q(first_timestamp__gt=end))
+            logger.debug(f'Signal {self.name} number of matching chunk files: {len(filtered_files)}')
+            df = pd.concat([f.get_samples(start, end) for f in filtered_files])
             return df
         else:
-            samples = self.samples.values_list('timestamp', 'value').filter(timestamp__gte=start, timestamp__lte=end)
+            samples = self.samples.values_list('timestamp', 'value') \
+                .filter(timestamp__gte=start, timestamp__lte=end)
             sql, params = samples.query.sql_with_params()
-            df = pd.read_sql_query(sql, connections[samples.db], params=params, index_col='timestamp', parse_dates=['timestamp'])
+            df = pd.read_sql_query(
+                sql, connections[samples.db],
+                params=params,
+                index_col='timestamp',
+                parse_dates=['timestamp']
+            )
             return df
 
     def __str__(self):

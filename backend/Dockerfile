@@ -1,5 +1,8 @@
 FROM python:3
 
+RUN apt-get update
+RUN apt-get install -y libsnappy-dev
+
 RUN pip install pipenv
 
 RUN mkdir /app
