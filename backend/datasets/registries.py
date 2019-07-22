@@ -13,7 +13,7 @@ class SourceRegistry(object):
             datasets.sources.__name__ + "."
         )
 
-        for finder, name, ispkg in namespace_iter:
+        for _, name, _ in namespace_iter:
             importlib.import_module(name)
 
         subclasses = datasets.sources.source_base.SourceBase.__subclasses__()

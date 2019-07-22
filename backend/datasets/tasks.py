@@ -1,9 +1,7 @@
-import re
 import pandas as pd
 import numpy as np
 from celery import Task, shared_task
 from django.db import transaction
-from django.core.files.base import ContentFile
 
 from datasets.models.data import Dataset, Signal, Sample, Tag
 from datasets.models.files import SignalChunkFile

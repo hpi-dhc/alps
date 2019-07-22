@@ -1,10 +1,5 @@
 import json
-from django.http import QueryDict
 from rest_framework import parsers
-
-import logging
-logger = logging.getLogger(__name__)
-
 
 class MultiFileParser(parsers.MultiPartParser):
 

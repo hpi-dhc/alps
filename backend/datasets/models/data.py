@@ -1,15 +1,12 @@
-from datetime import datetime
+import logging
 import pandas as pd
-import numpy as np
-import django.contrib.postgres.fields as postgres_fields
 from django.db import models, connections
 from django.db.models import Q
 
 from datasets.models.base import UUIDModel, OwnedModel
 from datasets.constants import signal_types, process_status
 
-import logging
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 class Subject(OwnedModel, UUIDModel):
     identifier = models.CharField(max_length=32)
@@ -100,23 +97,27 @@ class Signal(OwnedModel, UUIDModel):
             end = pd.Timestamp.now('UTC')
 
         if self.signal_chunk_files.count() > 0:
-            logger.debug(f'Signal {self.name} with {self.signal_chunk_files.count()} chunk files')
+            LOGGER.debug(
+                'Signal %s with %d chunk files',
+                self.name, self.signal_chunk_files.count()
+            )
             filtered_files = self.signal_chunk_files \
                 .exclude(Q(last_timestamp__lt=start) | Q(first_timestamp__gt=end))
-            logger.debug(f'Signal {self.name} number of matching chunk files: {len(filtered_files)}')
-            df = pd.concat([f.get_samples(start, end) for f in filtered_files])
-            return df
-        else:
-            samples = self.samples.values_list('timestamp', 'value') \
-                .filter(timestamp__gte=start, timestamp__lte=end)
-            sql, params = samples.query.sql_with_params()
-            df = pd.read_sql_query(
-                sql, connections[samples.db],
-                params=params,
-                index_col='timestamp',
-                parse_dates=['timestamp']
+            LOGGER.debug(
+                'Signal %s number of matching chunk files: %d}',
+                self.name, len(filtered_files)
             )
-            return df
+            return pd.concat([f.get_samples(start, end) for f in filtered_files])
+
+        samples = self.samples.values_list('timestamp', 'value') \
+            .filter(timestamp__gte=start, timestamp__lte=end)
+        sql, params = samples.query.sql_with_params()
+        return pd.read_sql_query(
+            sql, connections[samples.db],
+            params=params,
+            index_col='timestamp',
+            parse_dates=['timestamp']
+        )
 
     def __str__(self):
         return self.name

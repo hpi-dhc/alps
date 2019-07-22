@@ -1,5 +1,5 @@
 import os
-import io
+import logging
 import pandas as pd
 from django.db import models
 from django.conf import settings
@@ -7,8 +7,7 @@ from django.conf import settings
 from datasets.models.base import UUIDModel, OwnedModel
 from datasets.utils import raw_file_path, signal_file_path
 
-import logging
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 class RawFile(OwnedModel, UUIDModel):
     name = models.CharField(max_length=128)
@@ -35,10 +34,10 @@ class SignalChunkFile(OwnedModel, UUIDModel):
     )
 
     def get_samples(self, start, end):
-        logger.debug(f'SignalChunkFile of {self.signal.name} ({self.id}) Reading data')
+        LOGGER.debug('SignalChunkFile of %s (%s) Reading data', self.signal.name, self.id)
         df = pd.read_parquet(self.path.path, engine='fastparquet')
         if self.first_timestamp < start or self.last_timestamp > end:
-            logger.debug(f'SignalChunkFile of {self.signal.name} ({self.id}) Truncating data')
+            LOGGER.debug('SignalChunkFile of %s (%s) Truncating data', self.signal.name, self.id)
             df = df.truncate(start, end)
         return df
 

@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import permissions, serializers
+from rest_framework import permissions
 from datasets.models.data import Dataset, Session
 
 
