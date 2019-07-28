@@ -1,8 +1,22 @@
-import re
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from . import models
+
+
+class AnalysisLabelSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.AnalysisLabel
+        exclude = ('user',)
+
+
+class AnalysisSampleSerializer(serializers.ModelSerializer):
+    label = serializers.PrimaryKeyRelatedField(queryset=models.AnalysisLabel.objects.all())
+    session = serializers.PrimaryKeyRelatedField(queryset=models.Session.objects.all())
+
+    class Meta:
+        model = models.AnalysisSample
+        exclude = ('user',)
 
 
 class SignalSerializer(serializers.ModelSerializer):
@@ -34,11 +48,12 @@ class DatasetSerializer(serializers.ModelSerializer):
 
 class SessionDetailSerializer(serializers.ModelSerializer):
     datasets = DatasetSerializer(many=True, read_only=True)
+    analysis_samples = AnalysisSampleSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Session
         exclude = ('user',)
-        read_only_fields = ('datasets',)
+        read_only_fields = ('datasets', 'analysis_samples')
 
 
 class SessionListCreateSerializer(serializers.ModelSerializer):

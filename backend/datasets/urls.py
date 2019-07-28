@@ -9,11 +9,14 @@ urlpatterns = [
     path('subjects/<uuid:subject>/sessions/', views.SessionListCreate.as_view()),
     path('sessions/<uuid:pk>/', views.SessionDetail.as_view()),
     path('sessions/<uuid:session>/datasets/', views.DatasetListCreate.as_view()),
+    path('sessions/<uuid:session>/analysis_samples/', views.AnalysisSampleCreate.as_view()),
     path('datasets/<uuid:pk>/', views.DatasetDetail.as_view()),
     path('datasets/<uuid:dataset>/files/', views.RawFileCreate.as_view()),
     path('datasets/<uuid:dataset>/parse/', views.DatasetReparse.as_view()),
     path('signals/<uuid:pk>/', views.SignalDetail.as_view()),
     path('signals/<uuid:signal>/samples/', views.SampleList.as_view()),
+    path('analysis_samples/<uuid:pk>/', views.AnalysisSampleDetail.as_view()),
+    path('analysis_labels/', views.AnalysisLabelListCreate.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

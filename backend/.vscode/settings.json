@@ -1,4 +1,8 @@
 {
     "python.pythonPath": "/Users/felix/.local/share/virtualenvs/backend-rshS1_u6/bin/python",
     "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.linting.pylintArgs": [
+        "--load-plugins=pylint_django",
+    ]
 }

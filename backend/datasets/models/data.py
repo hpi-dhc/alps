@@ -107,7 +107,10 @@ class Signal(OwnedModel, UUIDModel):
                 'Signal %s number of matching chunk files: %d}',
                 self.name, len(filtered_files)
             )
-            return pd.concat([f.get_samples(start, end) for f in filtered_files])
+            chunks = [f.get_samples(start, end) for f in filtered_files]
+            if chunks:
+                return pd.concat(chunks)
+            return pd.DataFrame()
 
         samples = self.samples.values_list('timestamp', 'value') \
             .filter(timestamp__gte=start, timestamp__lte=end)
