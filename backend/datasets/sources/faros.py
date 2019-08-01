@@ -10,9 +10,14 @@ from datasets.sources.source_base import SourceBase
 
 class FarosSource(SourceBase):
 
-    COLUMN_TO_TYPE = {
-        'ECG': signal_types.ECG,
-        'HRV': signal_types.RR_INTERVAL,
+    META = {
+        'ECG': {
+            'type': signal_types.ECG
+        },
+        'HRV': {
+            'type': signal_types.RR_INTERVAL,
+            'unit': 'Milliseconds'
+        },
     }
 
     @classmethod
@@ -42,11 +47,11 @@ class FarosSource(SourceBase):
         raw_file = self.raw_files[0]
 
         with pyedflib.EdfReader(raw_file.path.path) as f:
-            signal_labels = f.getSignalLabels()   # get labels for types of signals
+            signal_labels = f.getSignalLabels()
             sample_freqs = f.getSampleFrequencies()
             start_ts = (f.getStartdatetime() - datetime.fromtimestamp(0)).total_seconds()
 
-            data = dict.fromkeys(dtypes)   # the signals has difference sizes, therefore put into a dictionary
+            data = dict.fromkeys(dtypes)
             for index, label in enumerate(signal_labels):
                 if label =='Accelerometer_X':
                     freq_acc = sample_freqs[index]
@@ -79,7 +84,11 @@ class FarosSource(SourceBase):
             for signal
             in data.keys()
         }
-        for key, value in self.COLUMN_TO_TYPE.items():
-            result[key]['type'] = value
+
+        for name, meta in self.META.items():
+            result[name] = {
+                **result[name],
+                **meta
+            }
 
         return result

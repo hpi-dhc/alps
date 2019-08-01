@@ -70,7 +70,6 @@ def save_parsed_signals(dataset, signals):
 
     for signal_name, data in signals.items():
         signal_type = data.get('type', signal_types.OTHER)
-        raw_file = data.get('raw_file_id', None)
         series = data['series']
 
         y_min = None
@@ -83,7 +82,9 @@ def save_parsed_signals(dataset, signals):
             name=signal_name,
             dataset=dataset,
             type=signal_type,
-            raw_file_id=raw_file,
+            raw_file_id=data.get('raw_file_id'),
+            frequency=data.get('frequency'),
+            unit=data.get('unit'),
             first_timestamp=series.first_valid_index(),
             last_timestamp=series.last_valid_index(),
             y_min=y_min,
@@ -109,6 +110,9 @@ def parse_raw_files(file_ids, dataset_id):
     dataset.status = process_status.PROCESSING
     dataset.save()
     result = dataset.source.parse(file_ids)
+
+    for value in result.values():
+        value['series'].dropna(inplace=True)
 
     with transaction.atomic():
         signal_ids = save_parsed_signals(dataset, result)

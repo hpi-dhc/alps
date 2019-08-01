@@ -17,6 +17,7 @@ urlpatterns = [
     path('signals/<uuid:signal>/samples/', views.SampleList.as_view()),
     path('analysis_samples/<uuid:pk>/', views.AnalysisSampleDetail.as_view()),
     path('analysis_labels/', views.AnalysisLabelListCreate.as_view()),
+    path('analysis_labels/<uuid:pk>/', views.AnalysisLabelDetail.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

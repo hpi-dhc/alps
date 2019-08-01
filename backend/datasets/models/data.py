@@ -85,6 +85,8 @@ class Signal(OwnedModel, UUIDModel):
         blank=True,
         null=True
     )
+    frequency = models.FloatField(blank=True, null=True)
+    unit = models.CharField(max_length=32, blank=True, null=True)
     first_timestamp = models.DateTimeField()
     last_timestamp = models.DateTimeField()
     y_min = models.FloatField(blank=True, null=True)
@@ -112,7 +114,11 @@ class Signal(OwnedModel, UUIDModel):
                 return pd.concat(chunks)
             return pd.DataFrame()
 
-        samples = self.samples.values_list('timestamp', 'value') \
+        value_model = self.samples
+        if self.tags.count() > 0:
+            value_model = self.tags
+
+        samples = value_model.values_list('timestamp', 'value') \
             .filter(timestamp__gte=start, timestamp__lte=end)
         sql, params = samples.query.sql_with_params()
         return pd.read_sql_query(

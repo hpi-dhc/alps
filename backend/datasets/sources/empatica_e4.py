@@ -18,10 +18,26 @@ class EmpaticaE4Source(SourceBase):
         'tags.csv': None,
     }
 
-    TYPES = {
-        'bvp': signal_types.PPG,
-        'ibi': signal_types.NN_INTERVAL,
-        'tags': signal_types.TAGS,
+    META = {
+        'bvp': {
+            'type': signal_types.PPG
+        },
+        'ibi': {
+            'type': signal_types.NN_INTERVAL,
+            'unit': 'Milliseconds'
+        },
+        'tags': {
+            'type': signal_types.TAGS
+        },
+        'temp': {
+            'unit': 'Celsius'
+        },
+        'hr': {
+            'unit': 'BPM'
+        },
+        'eda': {
+            'unit': 'Microsiemens'
+        }
     }
 
     @classmethod
@@ -108,6 +124,7 @@ class EmpaticaE4Source(SourceBase):
             start_time = pd.to_datetime(EmpaticaE4Source.read_value(file), unit='s', utc=True)
             values = np.loadtxt(file, delimiter=',', dtype='float64')
 
+        value = values * 1000 # convert from seconds to milliseconds
         df = pd.DataFrame(data=values, columns=['index', 'ibi'])
         df['index'] = df['index'].apply(lambda x: start_time + pd.Timedelta(x, unit='s'))
         df.set_index('index', inplace=True)
@@ -159,8 +176,11 @@ class EmpaticaE4Source(SourceBase):
                 'series': pd.Series(data=data, index=index, name='acc_mag')
             }
 
-        for name, signal_type in self.TYPES.items():
+        for name, meta in self.META.items():
             if name in result:
-                result[name]['type'] = signal_type
+                result[name] = {
+                    **result[name],
+                    **meta,
+                }
 
         return result
