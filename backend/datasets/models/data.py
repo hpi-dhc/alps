@@ -26,13 +26,6 @@ class Session(OwnedModel, UUIDModel):
 
 
 class Dataset(OwnedModel, UUIDModel):
-    STATUS_CHOICES = [
-        (process_status.QUEUED, 'Queued'),
-        (process_status.PROCESSING, 'Processing'),
-        (process_status.PROCESSED, 'Processed'),
-        (process_status.ERROR, 'Error')
-    ]
-
     title = models.CharField(
         max_length=128,
         default="Untitled"
@@ -40,7 +33,7 @@ class Dataset(OwnedModel, UUIDModel):
     # configuration = postgres_fields.JSONField()
     status = models.CharField(
         max_length=2,
-        choices=STATUS_CHOICES,
+        choices=process_status.CHOICES,
         default=process_status.QUEUED
     )
     session = models.ForeignKey(
@@ -58,19 +51,10 @@ class Dataset(OwnedModel, UUIDModel):
 
 
 class Signal(OwnedModel, UUIDModel):
-    TYPE_CHOICES = [
-        (signal_types.ECG, 'ECG'),
-        (signal_types.PPG, 'PPG'),
-        (signal_types.RR_INTERVAL, 'RR Interval'),
-        (signal_types.NN_INTERVAL, 'NN Interval'),
-        (signal_types.TAGS, 'Tags'),
-        (signal_types.OTHER, 'Other signal')
-    ]
-
     name = models.CharField(max_length=64)
     type = models.CharField(
         max_length=3,
-        choices=TYPE_CHOICES,
+        choices=signal_types.CHOICES,
         default=signal_types.OTHER
     )
     dataset = models.ForeignKey(

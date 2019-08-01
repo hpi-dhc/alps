@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.postgres import fields
+from django.contrib import postgres
 from .base import UUIDModel
 from datasets.registries import source_registry
 
@@ -8,7 +8,7 @@ class Source(UUIDModel):
     name = models.CharField(max_length=64)
     classname = models.CharField(max_length=64)
     installed = models.BooleanField(default=False)
-    fileOptions = fields.JSONField()
+    fileOptions = postgres.fields.JSONField()
 
     def parse(self, file_ids):
         source_parser = source_registry.get_plugin(self.classname)(file_ids)
