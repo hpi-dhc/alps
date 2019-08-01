@@ -9,6 +9,7 @@ from rest_framework.response import Response
 
 from . import serializers
 from . import models # Dataset, Subject, Session, Signal, Source, AnalysisSample,
+from .constants import signal_types
 from .tasks import parse_raw_files
 from .parsers import MultiFileParser, JSONURLParser
 from .permissions import IsOwner, IsSessionOwner, IsDatasetOwner
@@ -169,41 +170,39 @@ class SampleList(generics.ListAPIView):
         df = signal.samples_dataframe(start, end)
 
         resampling = None
-        if len(df) > max_samples:
+        if signal.type is not signal_types.TAGS and len(df) > max_samples:
+            resampling = 'range'
             LOGGER.debug('SampleList %s resampling from %s to %s', signal.name, len(df), max_samples)
             min_index = df.index[0]
             max_index = df.index[df.size - 1]
             length = max_index - min_index
-            if len(df) > max_samples * 20:
-                LOGGER.debug('SampleList %s resampling method: min/max', signal.name)
-                resampling = 'min/max'
-                freq = math.ceil((length.value / 10**3) / (max_samples / 2 - 1)) # subtract one, since this determines the offset
-                offset = f'{freq}U'
-                resampled_min = df.resample(offset).min()
-                resampled_max = df.resample(offset).max()
-                df = pd.DataFrame(
-                    columns=['value'],
-                    index=pd.date_range(
-                        start=min_index,
-                        end=max_index,
-                        periods=len(resampled_min) + len(resampled_max),
-                        tz='UTC'
-                    ),
-                )
-                df.iloc[::2] = resampled_min.values
-                df.iloc[1::2] = resampled_max.values
-            else:
-                LOGGER.debug('SampleList %s resampling method: mean', signal.name)
-                resampling = 'mean'
-                freq = math.ceil((length.value / 10**3) / (max_samples - 1))
-                offset = f'{freq}U'
-                df = df.resample(offset).mean()
+            freq = math.ceil((length.value / 10**3) / (max_samples - 1))
+            offset = f'{freq}U'
+            resampler = df.resample(offset)
+            resampled_min = resampler.min()
+            resampled_max = resampler.max()
+            resampled_mean = resampler.mean()
+            df = pd.DataFrame(
+                columns=['range', 'mean'],
+                index=resampled_mean.index.copy(),
+            )
+            df['range'] = resampled_min.iloc[:, 0].combine(
+                resampled_max.iloc[:, 0],
+                func=lambda x, y: [x, y] if x and y else None
+            ).values
+            df['mean'] = resampled_mean.values
 
         LOGGER.debug('SampleList %s prepare dataframe for response', signal.name)
-        df.dropna(inplace=True)
+        df.dropna(inplace=True) # after resampling we might have created rows with null values, which are not JSON compliant
         df.reset_index(inplace=True)
+
+        if resampling:
+            rename_map = dict(zip([df.columns[0]], ['x']))
+        else:
+            rename_map = dict(zip(df.columns, ['x', 'y']))
+
         df.rename(
-            columns=dict(zip(df.columns, ['x', 'y'])),
+            columns=rename_map,
             inplace=True
         )
         df['x'] = df['x'].astype('int') / 1e6
@@ -231,6 +230,12 @@ class AnalysisLabelListCreate(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
+class AnalysisLabelDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = models.AnalysisLabel.objects.all()
+    serializer_class = serializers.AnalysisLabelSerializer
+    permission_classes = (IsAuthenticated, IsOwner)
 
 
 class AnalysisSampleCreate(generics.CreateAPIView):
