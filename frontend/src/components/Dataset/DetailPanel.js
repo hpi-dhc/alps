@@ -12,7 +12,7 @@ import {
   Typography,
   Grid,
 } from '@material-ui/core';
-import { getSignals, getRawFiles } from '../../selectors/data';
+import { getRawFiles, getAllSignals } from '../../selectors/data';
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -33,7 +33,7 @@ DetailPanel.defaultProps = {
 
 function DetailPanel ({ dataset }) {
   const classes = useStyles();
-  const signals = useSelector(getSignals);
+  const signals = useSelector(getAllSignals);
   const rawFiles = useSelector(getRawFiles);
 
   return (
