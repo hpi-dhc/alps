@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
-import moment from 'moment';
+import formatDate from 'date-fns/format';
 import MaterialTable from 'material-table';
 import AddIcon from '@material-ui/icons/AddCircle';
 import DeleteIcon from '@material-ui/icons/Delete';
@@ -81,7 +81,7 @@ function DatasetTable ({ datasets, onAdd, onDelete }) {
         {
           title: 'Created at',
           field: 'created_at',
-          render: rowData => moment(rowData.created_at).format('LLL'),
+          render: rowData => formatDate(new Date(rowData.created_at), 'MMMM dd, yyyy HH:mm'),
         },
         {
           title: 'Status',

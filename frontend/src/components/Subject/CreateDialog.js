@@ -40,6 +40,7 @@ function SubjectCreateDialog ({ open, onCancel }) {
           <TextField
             autoFocus
             label='Identifier'
+            variant='outlined'
             id='identifier'
             onChange={handleInputChange}
             fullWidth

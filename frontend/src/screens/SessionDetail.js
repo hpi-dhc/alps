@@ -1,7 +1,7 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
-import moment from 'moment';
+import formatDate from 'date-fns/format';
 
 import DatasetTable from '../components/Dataset/Table';
 import DatasetCreateDialog from '../components/Dataset/CreateDialog';
@@ -68,7 +68,7 @@ function SessionDetail ({ match }) {
     <Container>
       <Typography variant='h5'>{session.title}</Typography>
       <Typography variant='subtitle1' gutterBottom>
-        {session.date ? moment(session.date).format('LL') : '-'}
+        {session.date ? formatDate(new Date(session.date), 'MMMM dd, yyyy') : '-'}
       </Typography>
       <DatasetTable
         datasets={datasets}

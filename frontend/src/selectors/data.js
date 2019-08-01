@@ -41,10 +41,44 @@ export const getDatasetsArrayBySession = createSelector(
   }
 );
 
-export const getSignals = (state) => state.data.signals;
-export const getTagSignals = createSelector(
+export const getAllSignals = (state) => state.data.signals;
+export const getSignals = createSelector(
+  getAllSignals,
+  (signals) => filterObjectByValue(signals, (each) => each.type !== 'TAG')
+);
+export const getIBISignals = createSelector(
   getSignals,
-  (signals) => filterObjectByValue(signals, (each) => each.type === 'TAG')
+  (signals) => filterObjectByValue(signals, (each) => ['NNI', 'RRI'].includes(each.type))
+);
+export const getTagSignalsArrayBySession = createSelector(
+  getDatasets, getAllSignals,
+  (datasets, signals) => {
+    const tagSignals = filterObjectByValue(signals, (each) => each.type === 'TAG');
+    return Object.values(tagSignals).reduce((tagSignalsBySession, tagSignal) => {
+      const session = datasets[tagSignal.dataset].session;
+      const tagsOfSession = tagSignalsBySession[session] ? [...tagSignalsBySession[session], tagSignal] : [tagSignal];
+      return {
+        ...tagSignalsBySession,
+        [session]: tagsOfSession,
+      };
+    }, {});
+  }
 );
 
 export const getRawFiles = (state) => state.data.rawFiles;
+
+export const getAnalysisLabels = (state) => state.data.analysisLabels;
+
+export const getAnalysisSamples = (state) => state.data.analysisSamples;
+export const getAnalysisSamplesArrayBySession = createSelector(
+  getSessions, getAnalysisSamples,
+  (sessions, analysisSamples) => {
+    return Object.values(sessions).reduce((analysisSamplesBySession, session) => ({
+      ...analysisSamplesBySession,
+      [session.id]: session.analysisSamples.reduce((sessionAnalysisSamples, each) => {
+        if (analysisSamples[each]) sessionAnalysisSamples.push(analysisSamples[each]);
+        return sessionAnalysisSamples;
+      }, []),
+    }), {});
+  }
+);

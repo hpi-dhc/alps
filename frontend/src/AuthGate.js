@@ -1,9 +1,10 @@
+import { hot } from 'react-hot-loader/root';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Route } from 'react-router-dom';
 import { isAuthenticated } from './selectors/authentication';
-import { SOURCE_LIST_REQUEST } from './constants/ActionTypes';
+import { SOURCE_LIST_REQUEST, ANALYSIS_LABEL_LIST_REQUEST } from './constants/ActionTypes';
 
 import App from './screens/App';
 import Login from './screens/Login';
@@ -52,8 +53,9 @@ const mapDispatchToProps = (dispatch) => {
   return {
     initApp: () => {
       dispatch({ type: SOURCE_LIST_REQUEST });
+      dispatch({ type: ANALYSIS_LABEL_LIST_REQUEST });
     },
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(AuthGate);
+export default hot(connect(mapStateToProps, mapDispatchToProps)(AuthGate));

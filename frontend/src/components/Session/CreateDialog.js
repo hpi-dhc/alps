@@ -57,6 +57,7 @@ function SessionCreateDialog ({ subject, open, onCancel }) {
             autoFocus
             label='Title'
             id='title'
+            variant='outlined'
             onChange={handleInputChange}
             className={classes.input}
             required
@@ -65,6 +66,7 @@ function SessionCreateDialog ({ subject, open, onCancel }) {
           <TextField
             label='Date'
             id='date'
+            variant='outlined'
             type='date'
             onChange={handleInputChange}
             className={classes.input}

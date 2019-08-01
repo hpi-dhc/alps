@@ -1,55 +1,56 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import moment from 'moment'
-import MaterialTable from 'material-table'
-import AddIcon from '@material-ui/icons/AddCircle'
-import DeleteIcon from '@material-ui/icons/Delete'
+import React from 'react';
+import PropTypes from 'prop-types';
+import formatDate from 'date-fns/format';
+import MaterialTable from 'material-table';
+import AddIcon from '@material-ui/icons/AddCircle';
+import DeleteIcon from '@material-ui/icons/Delete';
 
-function SubjectTable ({ subjects, onAdd, ...rest }) {
+SubjectTable.propTypes = {
+  subjects: PropTypes.array,
+  onAdd: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
+};
+
+function SubjectTable ({ subjects, onAdd, onDelete, ...rest }) {
   return (
     <MaterialTable
       {...rest}
       data={subjects}
       title='Subjects'
       options={{
-        selection: true
+        selection: true,
       }}
       actions={[
         {
           icon: () => <AddIcon />,
           tooltip: 'Create subject',
           isFreeAction: true,
-          onClick: onAdd
+          onClick: onAdd,
         },
         {
           icon: () => <DeleteIcon />,
           tooltip: 'Delete selected subjects',
-          onClick: (_, data) => alert(`In the future this will delete ${data.length} rows`)
-        }
+          onClick: (_, data) => onDelete(data),
+        },
       ]}
       columns={[
         {
           title: 'ID',
-          field: 'identifier'
+          field: 'identifier',
         },
         {
           title: 'Sessions',
           field: 'sessions',
-          render: rowData => rowData.sessions.length
+          render: rowData => rowData.sessions.length,
         },
         {
           title: 'Created at',
           field: 'created_at',
-          render: rowData => moment(rowData.created_at).format('LLL')
-        }
+          render: rowData => formatDate(new Date(rowData.created_at), 'MMMM dd, yyyy HH:mm'),
+        },
       ]}
     />
-  )
+  );
 }
 
-SubjectTable.propTypes = {
-  subjects: PropTypes.array,
-  onAdd: PropTypes.func.isRequired
-}
-
-export default SubjectTable
+export default SubjectTable;

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import moment from 'moment';
+import { addSeconds, subSeconds, isValid } from 'date-fns';
 import { apiEndpoint, useDataApi } from '.';
 
 export const requestSignal = (id) => {
@@ -19,7 +19,7 @@ export const useSignal = (id) => {
   return state;
 };
 
-export const useSignalSamples = (id, domain, maxSamples = 1000) => {
+export const useSignalSamples = (id, domain, maxSamples = 2000) => {
   const [state, setUrl] = useDataApi('', []);
 
   useEffect(
@@ -32,14 +32,14 @@ export const useSignalSamples = (id, domain, maxSamples = 1000) => {
 
         queryParams.append('max_samples', maxSamples);
 
-        const fromMoment = moment(Number(domain[0])).subtract(1, 'second');
-        if (fromMoment && fromMoment.isValid()) {
-          queryParams.append('start', fromMoment.format());
+        const from = subSeconds(new Date(Number(domain[0])), 1);
+        if (from && isValid(from)) {
+          queryParams.append('start', from.toISOString());
         }
 
-        const toMoment = moment(Number(domain[1])).add(1, 'second');
-        if (toMoment && toMoment.isValid()) {
-          queryParams.append('end', toMoment.format());
+        const to = addSeconds(new Date(Number(domain[1])), 1);
+        if (to && isValid(to)) {
+          queryParams.append('end', to.toISOString());
         }
 
         setUrl(url + queryParams.toString());

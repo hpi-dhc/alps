@@ -1,8 +1,6 @@
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 
-const CancelToken = axios.CancelToken;
-
 const serverURL = 'http://localhost:8000/';
 
 export const authEndpoint = axios.create({
@@ -23,6 +21,8 @@ export const apiEndpoint = axios.create({
 
 // this array is used to set configuration parameters on all endpoints
 export const endpointArray = [authEndpoint, apiEndpoint];
+
+const CancelToken = axios.CancelToken;
 
 export const useDataApi = (initialUrl, initialData, processData) => {
   const [url, setUrl] = useState(initialUrl);

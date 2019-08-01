@@ -2,7 +2,9 @@ import { schema } from 'normalizr';
 
 export const source = new schema.Entity('sources');
 
-export const sourceList = [source];
+export const analysisLabel = new schema.Entity('analysisLabels');
+
+export const analysisSample = new schema.Entity('analysisSamples');
 
 export const signal = new schema.Entity('signals');
 
@@ -24,10 +26,18 @@ export const dataset = new schema.Entity('datasets', {
 
 export const session = new schema.Entity('sessions', {
   datasets: [dataset],
+  analysisSamples: [analysisSample],
+}, {
+  processStrategy: (entity) => {
+    // eslint-disable-next-line camelcase
+    const { analysis_samples, ...rest } = entity;
+    return {
+      ...rest,
+      analysisSamples: analysis_samples,
+    };
+  },
 });
 
 export const subject = new schema.Entity('subjects', {
   sessions: [session],
 });
-
-export const subjectList = [subject];

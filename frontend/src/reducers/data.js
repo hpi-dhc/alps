@@ -10,6 +10,11 @@ import {
   SESSION_DESTROY_SUCCESS,
   SUBJECT_DESTROY_SUCCESS,
   DATASET_DESTROY_SUCCESS,
+  ANALYSIS_LABEL_LIST_SUCCESS,
+  ANALYSIS_LABEL_CREATE_SUCCESS,
+  ANALYSIS_SAMPLE_DESTROY_SUCCESS,
+  ANALYSIS_SAMPLE_UPDATE_SUCCESS,
+  ANALYSIS_SAMPLE_CREATE_SUCCESS,
 } from '../constants/ActionTypes';
 import { filterObjectByValue } from '../utils';
 
@@ -17,6 +22,8 @@ const initialState = {
   isLoading: false,
   error: null,
   sources: {},
+  analysisLabels: {},
+  analysisSamples: {},
   subjects: {},
   sessions: {},
   datasets: {},
@@ -39,7 +46,7 @@ const data = (state = initialState, action) => {
     newState = {
       ...newState,
       isLoading: false,
-      error: action.payload.error,
+      error: action.payload,
     };
   }
 
@@ -55,9 +62,15 @@ const data = (state = initialState, action) => {
     case SOURCE_LIST_SUCCESS:
       return {
         ...newState,
-        sources: {
-          ...state.sources,
-          ...action.payload.entities.sources,
+        sources: action.payload.entities.sources,
+      };
+    case ANALYSIS_LABEL_CREATE_SUCCESS:
+    case ANALYSIS_LABEL_LIST_SUCCESS:
+      return {
+        ...newState,
+        analysisLabels: {
+          ...newState.analysisLabels,
+          ...action.payload.entities.analysisLabels,
         },
       };
     case SUBJECT_GET_SUCCESS:
@@ -139,6 +152,10 @@ const data = (state = initialState, action) => {
           ...state.rawFiles,
           ...action.payload.entities.rawFiles,
         },
+        analysisSamples: {
+          ...state.analysisSamples,
+          ...action.payload.entities.analysisSamples,
+        },
       };
     case DATASET_CREATE_SUCCESS: {
       const dataset = action.payload.entities.datasets[action.payload.result];
@@ -184,6 +201,45 @@ const data = (state = initialState, action) => {
           ...newState.sessions,
         },
         datasets,
+      };
+    }
+    case ANALYSIS_SAMPLE_CREATE_SUCCESS: {
+      const analysisSample = action.payload.entities.analysisSamples[action.payload.result];
+      const session = newState.sessions[analysisSample.session];
+      return {
+        ...newState,
+        sessions: {
+          ...newState.session,
+          [session.id]: {
+            ...session,
+            analysisSamples: [...session.analysisSamples, analysisSample.id],
+          },
+        },
+        analysisSamples: {
+          ...newState.analysisSamples,
+          ...action.payload.entities.analysisSamples,
+        },
+      };
+    }
+    case ANALYSIS_SAMPLE_UPDATE_SUCCESS: {
+      return {
+        ...newState,
+        analysisSamples: {
+          ...newState.analysisSamples,
+          ...action.payload.entities.analysisSamples,
+        },
+      };
+    }
+    case ANALYSIS_SAMPLE_DESTROY_SUCCESS: {
+      const sessionId = newState.analysisSamples[action.id].session;
+      newState.sessions[sessionId].analysisSamples = newState.sessions[sessionId].analysisSamples.filter(id => id !== action.id);
+      const analysisSamples = filterObjectByValue(newState.analysisSamples, each => each.id !== action.id);
+      return {
+        ...newState,
+        sessions: {
+          ...newState.sessions,
+        },
+        analysisSamples,
       };
     }
     default:

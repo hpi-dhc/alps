@@ -14,6 +14,7 @@ import SubjectList from './SubjectList';
 import SubjectDetail from './SubjectDetail';
 import SessionDetail from './SessionDetail';
 import SessionPreprocess from './SessionPreprocess';
+import PreprocessSidebar from '../components/Preprocess/Sidebar';
 import BuildIcon from '@material-ui/icons/Build';
 
 import { getIsLoading } from '../selectors/data';
@@ -75,7 +76,7 @@ export default () => {
               <Redirect to='/' />
             </Switch>
           </main>
-          <Sidebar path='/sessions/:sessionId/preprocess' component={BuildIcon} />
+          <Sidebar path='/sessions/:sessionId/preprocess' component={PreprocessSidebar} />
         </Box>
       </div>
     </ThemeProvider>

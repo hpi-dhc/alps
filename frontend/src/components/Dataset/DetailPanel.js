@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { useSelector } from 'react-redux';
-import moment from 'moment';
+import formatDate from 'date-fns/format';
 import {
   Table,
   TableHead,
@@ -82,7 +82,7 @@ function DetailPanel ({ dataset }) {
                 </TableCell>
                 <TableCell align='right'>
                   {rawFiles[each].timestamp &&
-                    moment(rawFiles[each].timestamp).format('LLL')
+                    formatDate(new Date(rawFiles[each].timestamp), 'YYYY-DD-MMT[T]HH:mm:ss')
                   }
                 </TableCell>
               </TableRow>

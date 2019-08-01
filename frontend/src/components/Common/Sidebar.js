@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { Route } from 'react-router-dom';
 import { Drawer, makeStyles } from '@material-ui/core';
 
-const drawerWidth = 250;
+const drawerWidth = 300;
 
 const useStyles = makeStyles(theme => ({
   drawer: {
@@ -12,7 +12,7 @@ const useStyles = makeStyles(theme => ({
   },
   appBarSpacer: {
     ...theme.mixins.toolbar,
-    height: theme.mixins.toolbar.minHeight * 2, // TODO: Make responsive
+    height: theme.mixins.toolbar.minHeight * 2 + theme.spacing(3), // TODO: Make responsive
   },
   drawerPaper: {
     width: drawerWidth,

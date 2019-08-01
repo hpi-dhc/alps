@@ -2,6 +2,7 @@ import {
   SUBJECT_GET_REQUEST,
   SUBJECT_LIST_REQUEST,
   SUBJECT_CREATE_REQUEST,
+  SUBJECT_DESTROY_REQUEST,
 } from '../constants/ActionTypes';
 
 export const list = () => ({
@@ -13,7 +14,14 @@ export const get = (id) => ({
   id,
 });
 
-export const create = (payload) => ({
+export const destroy = (id) => ({
+  type: SUBJECT_DESTROY_REQUEST,
+  id,
+});
+
+export const create = (identifier) => ({
   type: SUBJECT_CREATE_REQUEST,
-  payload,
+  payload: {
+    identifier,
+  },
 });
