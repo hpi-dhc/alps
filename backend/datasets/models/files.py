@@ -3,9 +3,10 @@ import logging
 import pandas as pd
 from django.db import models
 from django.conf import settings
+from django.dispatch import receiver
 
 from datasets.models.base import UUIDModel, OwnedModel
-from datasets.utils import raw_file_path, signal_file_path
+from datasets.utils import raw_file_path, signal_file_path, delete_empty_folders
 
 LOGGER = logging.getLogger(__name__)
 
@@ -62,3 +63,11 @@ class SignalChunkFile(OwnedModel, UUIDModel):
 
     class Meta:
         ordering = ('first_timestamp',)
+
+@receiver(models.signals.post_delete, sender=RawFile)
+@receiver(models.signals.post_delete, sender=SignalChunkFile)
+def delete_file(sender, instance, using, **kwargs):
+    if os.path.exists(instance.path.path):
+        os.remove(instance.path.path)
+    folders = instance.path.path[:instance.path.path.rfind('/')]
+    delete_empty_folders(folders, depth=3)
