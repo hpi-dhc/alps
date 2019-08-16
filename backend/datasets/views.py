@@ -1,16 +1,19 @@
 import logging
 import math
+import operator
+from functools import reduce
 import pandas as pd
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from rest_framework import exceptions, generics, views
+from rest_framework import exceptions, generics, views, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from . import serializers
 from . import models # Dataset, Subject, Session, Signal, Source, AnalysisSample,
 from .constants import signal_types
-from .tasks import parse_raw_files
+from .tasks import parse_raw_files, start_analysis
 from .parsers import MultiFileParser, JSONURLParser
 from .permissions import IsOwner, IsSessionOwner, IsDatasetOwner
 from .constants import process_status
@@ -19,7 +22,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class SourceList(generics.ListAPIView):
-    queryset = models.Source.objects.all()
+    queryset = models.Source.objects
     serializer_class = serializers.SourceSerializer
 
 
@@ -34,7 +37,7 @@ class SubjectListCreate(generics.ListCreateAPIView):
 
 
 class SubjectDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = models.Subject.objects.all()
+    queryset = models.Subject.objects
     serializer_class = serializers.SubjectSerializer
     permission_classes = (IsAuthenticated, IsOwner)
 
@@ -55,7 +58,7 @@ class SessionListCreate(generics.ListCreateAPIView):
 
 
 class SessionDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = models.Session.objects.all()
+    queryset = models.Session.objects
     serializer_class = serializers.SessionDetailSerializer
     permission_classes = (IsAuthenticated, IsOwner)
 
@@ -76,7 +79,7 @@ class DatasetListCreate(generics.ListCreateAPIView):
 
 
 class DatasetDetail(generics.RetrieveDestroyAPIView):
-    queryset = models.Dataset.objects.all()
+    queryset = models.Dataset.objects
     serializer_class = serializers.DatasetSerializer
     permission_classes = (IsAuthenticated, IsOwner)
 
@@ -94,7 +97,9 @@ class DatasetReparse(views.APIView):
 
         has_files = bool(dataset.raw_files.count())
         if not has_files:
-            raise exceptions.MethodNotAllowed('Dataset has no files associated.')
+            raise exceptions.MethodNotAllowed(
+                'Dataset has no files associated.'
+            )
 
         for signal in dataset.signals.all():
             signal.delete()
@@ -128,7 +133,10 @@ class RawFileCreate(generics.CreateAPIView):
 
         # Check, if there are already files associated with the dataset
         if dataset.raw_files.count():
-            raise exceptions.MethodNotAllowed(None, detail="This dataset already contains files.")
+            raise exceptions.MethodNotAllowed(
+                None,
+                detail="This dataset already contains files."
+            )
 
         # Validate files
         if has_source:
@@ -147,7 +155,7 @@ class RawFileCreate(generics.CreateAPIView):
 
 
 class SignalDetail(generics.RetrieveAPIView):
-    queryset = models.Signal.objects.all()
+    queryset = models.Signal.objects
     serializer_class = serializers.SignalSerializer
     permission_classes = (IsAuthenticated, IsOwner)
 
@@ -163,21 +171,32 @@ class SampleList(generics.ListAPIView):
         if math.isnan(max_samples):
             raise exceptions.ValidationError('max_samples must be a number')
 
-        start = self.get_ts_from_query_params('start', pd.Timestamp.min.tz_localize('UTC'))
-        end = self.get_ts_from_query_params('end', pd.Timestamp.max.tz_localize('UTC'))
+        start = self.get_ts_from_query_params(
+            'start',
+            pd.Timestamp.min.tz_localize('UTC')
+        )
+        end = self.get_ts_from_query_params(
+            'end',
+            pd.Timestamp.max.tz_localize('UTC')
+        )
 
         LOGGER.debug('SampleList %s: %s - %s', signal.name, start, end)
         df = signal.samples_dataframe(start, end)
 
-        resampling = None
+        window = -1
         if signal.type is not signal_types.TAGS and len(df) > max_samples:
-            resampling = 'range'
-            LOGGER.debug('SampleList %s resampling from %s to %s', signal.name, len(df), max_samples)
+            LOGGER.debug(
+                'SampleList %s resampling from %s to %s',
+                signal.name,
+                len(df),
+                max_samples
+            )
             min_index = df.index[0]
             max_index = df.index[df.size - 1]
             length = max_index - min_index
-            freq = math.ceil((length.value / 10**3) / (max_samples - 1))
+            freq = math.ceil((length.value / 1e3) / (max_samples - 1))
             offset = f'{freq}U'
+            window = freq / 1e6
             resampler = df.resample(offset)
             resampled_min = resampler.min()
             resampled_max = resampler.max()
@@ -192,11 +211,14 @@ class SampleList(generics.ListAPIView):
             ).values
             df['mean'] = resampled_mean.values
 
-        LOGGER.debug('SampleList %s prepare dataframe for response', signal.name)
+        LOGGER.debug(
+            'SampleList %s prepare dataframe for response',
+            signal.name
+        )
         df.dropna(inplace=True) # after resampling we might have created rows with null values, which are not JSON compliant
         df.reset_index(inplace=True)
 
-        if resampling:
+        if window > 0:
             rename_map = dict(zip([df.columns[0]], ['x']))
         else:
             rename_map = dict(zip(df.columns, ['x', 'y']))
@@ -205,12 +227,14 @@ class SampleList(generics.ListAPIView):
             columns=rename_map,
             inplace=True
         )
+        # convert datetimeindex to unix timestamps
         df['x'] = df['x'].astype('int') / 1e6
         df['x'] = df['x'].round(3)
 
         LOGGER.debug('SampleList %s creating response', signal.name)
         return Response({
-            'resampling': resampling,
+            'downsampled': window > 0,
+            'window': window,
             'data': df.to_dict('records')
         })
 
@@ -223,8 +247,9 @@ class SampleList(generics.ListAPIView):
             ts = fallback
         return ts
 
+
 class AnalysisLabelListCreate(generics.ListCreateAPIView):
-    queryset = models.AnalysisLabel.objects.all()
+    queryset = models.AnalysisLabel.objects
     serializer_class = serializers.AnalysisLabelSerializer
     permission_classes = (IsAuthenticated, IsOwner)
 
@@ -233,13 +258,13 @@ class AnalysisLabelListCreate(generics.ListCreateAPIView):
 
 
 class AnalysisLabelDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = models.AnalysisLabel.objects.all()
+    queryset = models.AnalysisLabel.objects
     serializer_class = serializers.AnalysisLabelSerializer
     permission_classes = (IsAuthenticated, IsOwner)
 
 
 class AnalysisSampleCreate(generics.CreateAPIView):
-    queryset = models.AnalysisSample.objects.all()
+    queryset = models.AnalysisSample.objects
     serializer_class = serializers.AnalysisSampleSerializer
     parser_classes = (JSONURLParser,)
     permission_classes = (IsAuthenticated, IsSessionOwner)
@@ -249,6 +274,92 @@ class AnalysisSampleCreate(generics.CreateAPIView):
 
 
 class AnalysisSampleDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = models.AnalysisSample.objects.all()
+    queryset = models.AnalysisSample.objects
     serializer_class = serializers.AnalysisSampleSerializer
     permission_classes = (IsAuthenticated, IsOwner)
+
+
+class AnalysisDetail(generics.RetrieveUpdateAPIView):
+    serializer_class = serializers.AnalysisSerializer
+    permission_classes = (IsAuthenticated, IsOwner)
+
+    def get_queryset(self):
+        return models.Analysis.objects.filter(user=self.request.user)
+
+class AnalysisListCreate(generics.ListCreateAPIView):
+    serializer_class = serializers.AnalysisSerializer
+    permission_classes = (IsAuthenticated, IsOwner)
+
+    def get_serializer(self, *args, **kwargs):
+        if 'data' in kwargs:
+            data = kwargs['data']
+            if isinstance(data, list):
+                kwargs['many'] = True
+
+        return super().get_serializer(*args, **kwargs)
+
+    def get_queryset(self):
+        queryset = models.Analysis.objects.filter(user=self.request.user)
+
+        session = self.request.query_params.get('session')
+        if session is not None:
+            queryset = queryset.filter(signal__dataset__session=session)
+            queryset = queryset.distinct()
+
+        signal = self.request.query_params.get('signal')
+        if signal is not None:
+            queryset = queryset.filter(signal=signal)
+
+        return queryset
+
+    @transaction.atomic
+    def perform_create(self, serializer):
+        analyses = serializer.save(
+            user=self.request.user,
+            created_at=pd.Timestamp.now('UTC')
+        )
+        if not isinstance(analyses, list):
+            analyses = [analyses]
+
+        # delete previous analysis results for
+        # same signal, method and label combinations without snapshot relation
+        created_ids = [a.id for a in analyses]
+        dangling_results = reduce(
+            operator.or_,
+            [
+                Q(signal__dataset__session=a.signal.dataset.session.id)
+                and Q(label=a.label)
+                for a in analyses
+            ]
+        )
+        models.Analysis.objects \
+            .exclude(id__in=created_ids) \
+            .filter(dangling_results, snapshot=None) \
+            .delete()
+
+        def start_analysis_tasks():
+            for each in created_ids:
+                start_analysis.delay(each)
+
+        transaction.on_commit(start_analysis_tasks)
+
+
+class AnalysisSnapshotListCreate(generics.ListCreateAPIView):
+    serializer_class = serializers.AnalysisSnapshotSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        queryset = models.AnalysisSnapshot.objects.filter(user=self.request.user)
+
+        session = self.request.query_params.get('session')
+        if session is not None:
+            queryset = queryset.filter(analyses__signal__dataset__session=session)
+            queryset = queryset.distinct()
+
+        return queryset
+
+
+class ProcessingMethodList(generics.ListAPIView):
+    queryset = models.ProcessingMethod.objects
+    serializer_class = serializers.ProcessingMethodSerializer
+    permission_classes = (IsAuthenticated,)

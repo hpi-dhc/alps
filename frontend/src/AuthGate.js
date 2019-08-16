@@ -4,7 +4,11 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Route } from 'react-router-dom';
 import { isAuthenticated } from './selectors/authentication';
-import { SOURCE_LIST_REQUEST, ANALYSIS_LABEL_LIST_REQUEST } from './constants/ActionTypes';
+import {
+  SOURCE_LIST_REQUEST,
+  ANALYSIS_LABEL_LIST_REQUEST,
+  PROCESSINGMETHOD_LIST_REQUEST,
+} from './constants/ActionTypes';
 
 import App from './screens/App';
 import Login from './screens/Login';
@@ -54,6 +58,7 @@ const mapDispatchToProps = (dispatch) => {
     initApp: () => {
       dispatch({ type: SOURCE_LIST_REQUEST });
       dispatch({ type: ANALYSIS_LABEL_LIST_REQUEST });
+      dispatch({ type: PROCESSINGMETHOD_LIST_REQUEST });
     },
   };
 };

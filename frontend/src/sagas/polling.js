@@ -4,7 +4,8 @@ import { PROCESS_STATUS } from '../components/Common/StatusIcon';
 import * as ActionTypes from '../constants/ActionTypes';
 import * as Schemas from '../schemas';
 import * as Datasets from '../api/datasets';
-import { getDatasets } from '../selectors/data';
+import * as Analysis from '../api/analysis';
+import { getDatasets, getAnalysisResults } from '../selectors/data';
 
 function * pollDataset (id) {
   let keepPolling = true;
@@ -26,23 +27,44 @@ function * pollDataset (id) {
   }
 }
 
-function * watchStopDatasetPolling (id) {
+function * pollAnalysis (id) {
   let keepPolling = true;
   while (keepPolling) {
-    const action = yield take(ActionTypes.DATASET_STOP_POLLING);
+    try {
+      yield delay(1000);
+      const response = yield call(Analysis.get, id);
+      const payload = normalize(response.data, Schemas.analysisResult);
+      const result = payload.entities.analysisResults[id];
+      const resultsInStore = yield select(getAnalysisResults);
+      if (result.status !== resultsInStore[id].status) {
+        yield put({ type: ActionTypes.ANALYSIS_RESULT_GET_SUCCESS, payload });
+      }
+      keepPolling = ![PROCESS_STATUS.PROCESSED, PROCESS_STATUS.ERROR].includes(result.status);
+    } catch (error) {
+      const payload = error.response ? error.response.data : error;
+      yield put({ type: ActionTypes.ANALYSIS_RESULT_FAILURE, payload });
+    }
+  }
+}
+
+function * watchPolling (id, type) {
+  let keepPolling = true;
+  while (keepPolling) {
+    const action = yield take(type);
     keepPolling = id !== action.id;
   }
 }
 
-function * startDatasetPolling (action) {
+function * startPolling (pollFunction, stopActionType, action) {
   yield race([
-    call(pollDataset, action.id),
-    call(watchStopDatasetPolling, action.id),
+    call(pollFunction, action.id),
+    call(watchPolling, action.id, stopActionType),
   ]);
 }
 
 export default function * pollingSaga () {
   yield all([
-    takeEvery(ActionTypes.DATASET_START_POLLING, startDatasetPolling),
+    takeEvery(ActionTypes.DATASET_START_POLLING, startPolling, pollDataset, ActionTypes.DATASET_STOP_POLLING),
+    takeEvery(ActionTypes.ANALYSIS_RESULT_START_POLLING, startPolling, pollAnalysis, ActionTypes.ANALYSIS_RESULT_STOP_POLLING),
   ]);
 }

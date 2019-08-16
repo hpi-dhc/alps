@@ -21,6 +21,7 @@ services:
       dockerfile: Dockerfile
     image: &backend backend
     command: python manage.py runserver --noreload 0.0.0.0:8000
+    restart: unless-stopped
     ports:
       - '8000:8000'
       - '5678:5678'
@@ -40,6 +41,7 @@ services:
   worker:
     image: *backend
     command: celery --app=backend worker --hostname=worker@%h --autoscale=4,2 --loglevel=INFO
+    restart: unless-stopped
     volumes:
       - ./backend:/app
       - ./uploads:/uploads

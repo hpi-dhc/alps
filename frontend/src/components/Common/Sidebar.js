@@ -9,6 +9,7 @@ const useStyles = makeStyles(theme => ({
   drawer: {
     flexShrink: 0,
     width: drawerWidth,
+    overflowY: 'scroll',
   },
   appBarSpacer: {
     ...theme.mixins.toolbar,

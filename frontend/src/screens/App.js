@@ -18,6 +18,8 @@ import PreprocessSidebar from '../components/Preprocess/Sidebar';
 import BuildIcon from '@material-ui/icons/Build';
 
 import { getIsLoading } from '../selectors/data';
+import SessionAnalysis from './SessionAnalysis';
+import AnalysisSidebar from '../components/Analysis/Sidebar';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -41,7 +43,6 @@ const useStyles = makeStyles(theme => ({
   content: {
     flexGrow: 1,
     padding: theme.spacing(3),
-    overflow: 'auto',
   },
 }));
 
@@ -72,11 +73,12 @@ export default () => {
               <Route exact path={'/sessions/:sessionId'} component={SessionDetail} />
               <Route path={'/sessions/:sessionId/sync'} component={BuildIcon} />
               <Route path={'/sessions/:sessionId/preprocess'} component={SessionPreprocess} />
-              <Route path={'/sessions/:sessionId/analyse'} component={BuildIcon} />
+              <Route path={'/sessions/:sessionId/analyse'} component={SessionAnalysis} />
               <Redirect to='/' />
             </Switch>
           </main>
           <Sidebar path='/sessions/:sessionId/preprocess' component={PreprocessSidebar} />
+          <Sidebar path='/sessions/:sessionId/analyse' component={AnalysisSidebar} />
         </Box>
       </div>
     </ThemeProvider>

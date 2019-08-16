@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { useSelector } from 'react-redux';
-import { getItems } from '../../selectors/preprocess';
+import { getItems } from '../../selectors/plots';
 import {
   Container,
   makeStyles,
@@ -9,14 +9,10 @@ import {
   Typography,
 } from '@material-ui/core';
 import AnalysisSampleList from '../AnalysisSample/List';
-import PlotMode from './PlotMode';
-import TagSelect from './TagSelect';
+import PlotMode from '../Signal/PlotMode';
+import TagSelect from '../Common/TagSelect';
 
 const useStyles = makeStyles(theme => ({
-  selectWithIcon: {
-    display: 'flex',
-    alignItems: 'flex-end',
-  },
   divider: {
     marginTop: theme.spacing(2),
     marginBottom: theme.spacing(2),

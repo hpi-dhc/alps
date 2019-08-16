@@ -3,14 +3,11 @@ import numpy as np
 from celery import Task, shared_task
 from django.db import transaction
 
-from datasets.models.data import Dataset, Signal, Sample, Tag
-from datasets.models.files import SignalChunkFile
+from datasets.models import Dataset, Signal, Sample, Tag, SignalChunkFile, Analysis
 from datasets.constants import process_status, signal_types
 
 import logging
 logger = logging.getLogger(__name__)
-
-CHUNK_LENGTH = 3600
 
 class DatasetTask(Task):
 
@@ -18,6 +15,13 @@ class DatasetTask(Task):
         dataset = Dataset.objects.get(id=args[1])
         dataset.status = process_status.ERROR
         dataset.save()
+
+class AnalysisTask(Task):
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        analysis = Analysis.objects.get(id=args[0])
+        analysis.status = process_status.ERROR
+        analysis.save()
 
 def save_to_sample_table(series, signal):
     samples = [
@@ -44,6 +48,7 @@ def save_to_tag_table(series, signal):
     Tag.objects.bulk_create(tags)
 
 def save_to_signal_file(series, signal):
+    CHUNK_LENGTH = 3600
     lower_bound = series.index.min()
     lower_bound = lower_bound - pd.Timedelta(
         microseconds=lower_bound.microsecond
@@ -120,3 +125,15 @@ def parse_raw_files(file_ids, dataset_id):
         dataset.save()
 
     return signal_ids
+
+@shared_task(base=AnalysisTask)
+def start_analysis(analysis_id):
+    analysis = Analysis.objects.get(id=analysis_id)
+    analysis.status = process_status.PROCESSING
+    analysis.save()
+
+    analysis.result = analysis.compute()
+    analysis.status = process_status.PROCESSED
+    analysis.save()
+
+    return analysis_id

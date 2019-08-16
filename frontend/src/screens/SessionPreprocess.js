@@ -9,8 +9,8 @@ import SignalCard from '../components/Signal/Card';
 import { filterObjectByValue } from '../utils';
 
 import { getSessions, getSignals, getDatasets, getIBISignals } from '../selectors/data';
-import { getItems } from '../selectors/preprocess';
-import { upsertPlot, deletePlot, setDomain } from '../actions/preprocess';
+import { getItems, getMode } from '../selectors/plots';
+import * as Plots from '../actions/plots';
 import * as Sessions from '../actions/sessions';
 import * as AnalysisSamples from '../actions/analysisSamples';
 import * as plotModes from '../constants/PlotModes';
@@ -26,6 +26,7 @@ function SessionPreprocess ({ match }) {
   const signals = useSelector(getSignals);
   const ibiSignals = useSelector(getIBISignals);
   const preprocess = useSelector((state) => getItems(state)[sessionId]);
+  const plotMode = useSelector(getMode);
   const [isSampleDialogOpen, setSampleDialogOpen] = useState(false);
   const [markedArea, setMarkedArea] = useState([null, null]);
 
@@ -38,47 +39,27 @@ function SessionPreprocess ({ match }) {
   useEffect(() => {
     if (!preprocess) {
       // determine initial domain to fit all signals
-      const timestamps = Object.values(signals).reduce((object, each) => ({
-        from: [...object.from, new Date(each.first_timestamp).valueOf()],
-        to: [...object.from, new Date(each.last_timestamp).valueOf()],
+      const sessionSignals = Object.values(datasets).reduce((array, each) => [...array, ...each.signals], []);
+      const timestamps = sessionSignals.reduce((object, each) => ({
+        from: [...object.from, new Date(signals[each].first_timestamp).valueOf()],
+        to: [...object.from, new Date(signals[each].last_timestamp).valueOf()],
       }), { from: [], to: [] });
       const domain = [Math.min(...timestamps.from), Math.max(...timestamps.to)];
-      dispatch(setDomain(sessionId, domain));
-      dispatch(upsertPlot(sessionId, { id: uuid() }, true));
+      dispatch(Plots.setDomain(sessionId, domain));
+      dispatch(Plots.upsert(sessionId, { id: uuid() }, true));
     }
-  }, [dispatch, preprocess, sessionId, signals]);
+  }, [datasets, dispatch, preprocess, sessionId, signals]);
 
   const handleCreatePlot = useCallback(
     () => {
-      dispatch(upsertPlot(session.id, { id: uuid() }));
+      dispatch(Plots.upsert(session.id, { id: uuid() }));
     },
     [dispatch, session]
   );
 
-  const handleChangePlot = useCallback(
-    (event) => {
-      const { name, value } = event.target;
-      const type = name.substring(0, name.indexOf('-'));
-      const id = name.substring(name.indexOf('-') + 1);
-      if (type === 'dataset') {
-        dispatch(upsertPlot(sessionId, { id, dataset: value, signal: '' }));
-      } else {
-        dispatch(upsertPlot(sessionId, { id, signal: value }));
-      }
-    },
-    [dispatch, sessionId]
-  );
-
-  const handleClosePlot = useCallback(
-    (id) => {
-      dispatch(deletePlot(sessionId, id));
-    },
-    [dispatch, sessionId]
-  );
-
   const handleZoom = useCallback(
     ([start, end]) => {
-      dispatch(setDomain(sessionId, [Number(start), Number(end)]));
+      dispatch(Plots.setDomain(sessionId, [Number(start), Number(end)]));
     },
     [dispatch, sessionId]
   );
@@ -89,9 +70,9 @@ function SessionPreprocess ({ match }) {
   };
 
   const handleAreaMarked = (data) => {
-    if (preprocess.plotMode === plotModes.ZOOM_MODE) {
+    if (plotMode === plotModes.ZOOM_MODE) {
       handleZoom(data);
-    } else if (preprocess.plotMode === plotModes.LABEL_MODE) {
+    } else if (plotMode === plotModes.LABEL_MODE) {
       handleLabel(data);
     }
   };
@@ -110,17 +91,17 @@ function SessionPreprocess ({ match }) {
   const renderMainSignalCard = () => {
     const plot = preprocess.plots[preprocess.mainPlot];
     return (
-      <Grid item key={plot.id}>
+      <Grid item key={plot.id} style={{ position: 'sticky', top: 130, zIndex: 1000 }}>
         <SignalCard
           datasets={datasets}
           signals={ibiSignals}
           plot={plot}
+          elevation={6}
           tagSignal={preprocess.tags}
-          onChange={handleChangePlot}
           plotProps={{
             domainX: preprocess.domain,
             onAreaMarked: handleAreaMarked,
-            mode: preprocess.plotMode,
+            mode: plotMode,
           }}
         />
       </Grid>
@@ -138,12 +119,11 @@ function SessionPreprocess ({ match }) {
             signals={signals}
             plot={plot}
             tagSignal={preprocess.tags}
-            onChange={handleChangePlot}
-            onClose={handleClosePlot}
+            closable
             plotProps={{
               domainX: preprocess.domain,
               onAreaMarked: handleAreaMarked,
-              mode: preprocess.plotMode,
+              mode: plotMode,
             }}
           />
         </Grid>

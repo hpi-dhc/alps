@@ -29,6 +29,19 @@ def search_dict(dictionary, search_for):
 def is_non_zero_file(path):
     return os.path.isfile(path) and os.path.getsize(path) > 0
 
+def delete_empty_folders(path, depth):
+    while depth > 0:
+        try:
+            os.rmdir(path)
+        except OSError:
+            break
+        sub_index = path.rfind('/')
+        if sub_index > 0:
+            path = path[:sub_index]
+            depth = depth - 1
+        else:
+            break
+
 def create_series(name, data, start_time, freq, dtype=None):
     if not dtype and hasattr(data, 'dtype'):
         dtype = data.dtype

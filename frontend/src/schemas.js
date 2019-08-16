@@ -1,10 +1,14 @@
 import { schema } from 'normalizr';
 
+export const processingMethod = new schema.Entity('processingMethods');
+
 export const source = new schema.Entity('sources');
 
 export const analysisLabel = new schema.Entity('analysisLabels');
 
 export const analysisSample = new schema.Entity('analysisSamples');
+
+export const analysisResult = new schema.Entity('analysisResults');
 
 export const signal = new schema.Entity('signals');
 

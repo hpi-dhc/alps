@@ -11,6 +11,10 @@ SubjectTable.propTypes = {
   onDelete: PropTypes.func.isRequired,
 };
 
+SubjectTable.defaultProps = {
+  subjects: [],
+};
+
 function SubjectTable ({ subjects, onAdd, onDelete, ...rest }) {
   return (
     <MaterialTable
@@ -19,6 +23,8 @@ function SubjectTable ({ subjects, onAdd, onDelete, ...rest }) {
       title='Subjects'
       options={{
         selection: true,
+        pageSize: subjects.length > 10 ? 20 : 10,
+        pageSizeOptions: [10, 20, 50, 100],
       }}
       actions={[
         {

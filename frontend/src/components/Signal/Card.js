@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useMemo, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -21,7 +21,7 @@ import DotsToggleIcon from '@material-ui/icons/FiberManualRecord';
 
 import SignalPlot from './Plot';
 import { useSignalSamples } from '../../api/signals';
-import { setDomain } from '../../actions/preprocess';
+import * as Plots from '../../actions/plots';
 import { getSources, getAnalysisSamplesArrayBySession } from '../../selectors/data';
 
 const useStyles = makeStyles(theme => ({
@@ -45,28 +45,50 @@ const useStyles = makeStyles(theme => ({
 SignalCard.propTypes = {
   datasets: PropTypes.object,
   signals: PropTypes.object,
-  tagSignal: PropTypes.string,
   plot: PropTypes.object.isRequired,
-  onChange: PropTypes.func,
-  onClose: PropTypes.func,
+  tagSignal: PropTypes.string,
+  closable: PropTypes.bool,
   plotProps: PropTypes.object,
 };
 
 SignalCard.defaultProps = {
   datasets: {},
   signals: {},
+  closable: false,
 };
 
-function SignalCard ({ datasets, signals, onChange, onClose, plot, tagSignal, plotProps, ...rest }) {
+function SignalCard ({ datasets, signals, plot, tagSignal, closable, plotProps, ...rest }) {
   const classes = useStyles();
   const dispatch = useDispatch();
   const sources = useSelector(getSources);
+  const signal = signals[plot.signal];
   const analysisSamples = useSelector(state => getAnalysisSamplesArrayBySession(state)[plot.session]);
-  const domainY = plot.signal ? [signals[plot.signal].y_min, signals[plot.signal].y_max] : undefined;
+  const domainY = signal ? [signal.y_min, signal.y_max] : undefined;
   const [ isDomainYAuto, setDomainYAuto ] = useState(true);
   const [ showDots, setShowDots ] = useState(false);
 
-  const { data: signal, isError, isLoading } = useSignalSamples(plot.signal, plotProps.domainX);
+  const filteredSignals = useMemo(() => {
+    if (!plot.dataset || !datasets[plot.dataset]) return [];
+    const dataset = datasets[plot.dataset];
+    return dataset.signals.reduce((array, each) => {
+      if (signals[each]) {
+        array.push(signals[each]);
+      }
+      return array;
+    }, []);
+  }, [plot.dataset, datasets, signals]);
+
+  // auto-select signal, if there is only one for the selected dataset
+  useEffect(() => {
+    if (filteredSignals.length === 1 && !plot.signal) {
+      dispatch(Plots.upsert(plot.session, {
+        id: plot.id,
+        signal: filteredSignals[0].id,
+      }));
+    }
+  }, [dispatch, filteredSignals, plot.id, plot.session, plot.signal]);
+
+  const { data: samples, isError, isLoading } = useSignalSamples(plot.signal, plotProps.domainX);
   const { data: { data: tags } } = useSignalSamples(tagSignal, plotProps.domainX);
 
   const getSourceName = (dataset) => {
@@ -74,14 +96,39 @@ function SignalCard ({ datasets, signals, onChange, onClose, plot, tagSignal, pl
     return source ? source.name : 'Raw files';
   };
 
+  const handleClose = useCallback(() => {
+    dispatch(Plots.destroy(plot.session, plot.id));
+  }, [dispatch, plot]);
+
+  const handleChangeDataset = useCallback((event) => {
+    dispatch(Plots.upsert(plot.session, {
+      id: plot.id,
+      dataset: event.target.value,
+      signal: '',
+    }));
+  }, [dispatch, plot]);
+
+  const handleChangeSignal = useCallback((event) => {
+    dispatch(Plots.upsert(plot.session, {
+      id: plot.id,
+      signal: event.target.value,
+    }));
+  }, [dispatch, plot]);
+
+  // const handleZoomIn = useCallback(([start, end]) => {
+  //   dispatch(Plots.setDomain(plot.session, [Number(start), Number(end)]));
+  // }, [dispatch, plot]);
+
   const handleZoomOut = useCallback(() => {
-    const signal = signals[plot.signal];
-    const domainX = [new Date(signal.first_timestamp).valueOf(), new Date(signal.last_timestamp).valueOf()];
-    dispatch(setDomain(plot.session, domainX));
-  }, [dispatch, plot, signals]);
+    const domainX = [
+      new Date(signal.first_timestamp).valueOf(),
+      new Date(signal.last_timestamp).valueOf(),
+    ];
+    dispatch(Plots.setDomain(plot.session, domainX));
+  }, [dispatch, plot, signal]);
 
   const handlePanEnd = useCallback(({ domainX }) => {
-    dispatch(setDomain(plot.session, domainX));
+    dispatch(Plots.setDomain(plot.session, domainX));
   }, [dispatch, plot.session]);
 
   const toggleDomainY = () => {
@@ -96,7 +143,7 @@ function SignalCard ({ datasets, signals, onChange, onClose, plot, tagSignal, pl
     return (
       <Select
         value={plot.dataset}
-        onChange={onChange}
+        onChange={handleChangeDataset}
         name={`dataset-${plot.id}`}
         displayEmpty
       >
@@ -111,22 +158,10 @@ function SignalCard ({ datasets, signals, onChange, onClose, plot, tagSignal, pl
   };
 
   const renderSignalSelection = () => {
-    let filteredSignals = [];
-
-    if (plot.dataset && datasets[plot.dataset]) {
-      const dataset = datasets[plot.dataset];
-      filteredSignals = dataset.signals.reduce((array, each) => {
-        if (signals[each]) {
-          array.push(signals[each]);
-        }
-        return array;
-      }, []);
-    }
-
     return (
       <Select
         value={plot.signal}
-        onChange={onChange}
+        onChange={handleChangeSignal}
         name={`signal-${plot.id}`}
         displayEmpty
         disabled={!plot.dataset}
@@ -146,7 +181,15 @@ function SignalCard ({ datasets, signals, onChange, onClose, plot, tagSignal, pl
         { renderDatasetSelection() }
         { renderSignalSelection() }
         { isError && <Tooltip title='Unable to load signal.'><ErrorIcon color='error' /></Tooltip> }
-        { signal.resampling && <Typography variant='caption' color='textSecondary'>Resampled ({signal.resampling})</Typography> }
+        { samples.downsampled &&
+          <Typography
+            variant='caption'
+            color='textSecondary'
+            title={`Window size: ${samples.window} sec.`}
+          >
+            Downsampled
+          </Typography>
+        }
         <IconButton
           size='small'
           className={classes.shiftButtons}
@@ -168,14 +211,14 @@ function SignalCard ({ datasets, signals, onChange, onClose, plot, tagSignal, pl
           size='small'
           onClick={handleZoomOut}
           title='Show complete signal'
-          disabled={!signal.data}
+          disabled={!samples.data}
         >
           <ZoomOutIcon fontSize='inherit' />
         </IconButton>
-        { onClose &&
+        { closable &&
           <IconButton
             size='small'
-            onClick={() => onClose(plot.id)}
+            onClick={handleClose}
             title='Close plot'
           >
             <CloseIcon fontSize='inherit' />
@@ -184,7 +227,7 @@ function SignalCard ({ datasets, signals, onChange, onClose, plot, tagSignal, pl
       </CardActions>
       <CardContent className={classes.contentArea}>
         <SignalPlot
-          data={plot.signal ? signal.data : null}
+          data={signal ? samples.data : null}
           tags={tagSignal ? tags : []}
           analysisSamples={analysisSamples}
           showDots={showDots}

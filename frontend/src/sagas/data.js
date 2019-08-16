@@ -3,11 +3,13 @@ import { normalize } from 'normalizr';
 import * as Schemas from '../schemas';
 import * as ActionTypes from '../constants/ActionTypes';
 import * as Sources from '../api/sources';
+import * as ProcessingMethods from '../api/processingMethods';
 import * as Subjects from '../api/subjects';
 import * as Sessions from '../api/sessions';
 import * as Datasets from '../api/datasets';
 import * as AnalysisLabels from '../api/analysisLabels';
 import * as AnalysisSamples from '../api/analysisSamples';
+import * as Analysis from '../api/analysis';
 
 function * handleSourceListRequest (action) {
   try {
@@ -18,6 +20,18 @@ function * handleSourceListRequest (action) {
     console.log(error);
     const payload = error.response;
     yield put({ type: ActionTypes.SOURCE_FAILURE, payload });
+  }
+}
+
+function * handleProcessingMethodListRequest (action) {
+  try {
+    const response = yield call(ProcessingMethods.list);
+    const payload = normalize(response.data, [Schemas.processingMethod]);
+    yield put({ type: ActionTypes.PROCESSINGMETHOD_LIST_SUCCESS, payload });
+  } catch (error) {
+    console.log(error);
+    const payload = error.response;
+    yield put({ type: ActionTypes.PROCESSINGMETHOD_FAILURE, payload });
   }
 }
 
@@ -227,8 +241,22 @@ function * handleAnalysisSampleDestroyRequest (action) {
   }
 }
 
+function * handleAnalysisResultListRequest (action) {
+  try {
+    const { session } = action;
+    const response = yield call(Analysis.list, session);
+    const result = normalize(response.data, [Schemas.analysisResult]);
+    yield put({ type: ActionTypes.ANALYSIS_RESULT_LIST_SUCCESS, payload: result });
+  } catch (error) {
+    console.log(error);
+    const payload = error.response;
+    yield put({ type: ActionTypes.ANALYSIS_RESULT_FAILURE, payload });
+  }
+}
+
 export default function * dataSaga () {
   yield all([
+    takeEvery(ActionTypes.PROCESSINGMETHOD_LIST_REQUEST, handleProcessingMethodListRequest),
     takeEvery(ActionTypes.SOURCE_LIST_REQUEST, handleSourceListRequest),
     takeEvery(ActionTypes.SUBJECT_GET_REQUEST, handleSubjectGetRequest),
     takeEvery(ActionTypes.SUBJECT_LIST_REQUEST, handleSubjectListRequest),
@@ -245,5 +273,6 @@ export default function * dataSaga () {
     takeEvery(ActionTypes.ANALYSIS_SAMPLE_CREATE_REQUEST, handleAnalysisSampleRequest),
     takeEvery(ActionTypes.ANALYSIS_SAMPLE_UPDATE_REQUEST, handleAnalysisSampleUpdateRequest),
     takeEvery(ActionTypes.ANALYSIS_SAMPLE_DESTROY_REQUEST, handleAnalysisSampleDestroyRequest),
+    takeEvery(ActionTypes.ANALYSIS_RESULT_LIST_REQUEST, handleAnalysisResultListRequest),
   ]);
 }

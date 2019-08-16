@@ -4,6 +4,12 @@ import { filterObjectByValue } from '../utils';
 export const getIsLoading = (state) => state.data.isLoading;
 export const getError = (state) => state.data.error;
 
+export const getProcessingMethods = (state) => state.data.processingMethods;
+export const getInstalledProcessingMethods = createSelector(
+  getProcessingMethods,
+  (methods) => filterObjectByValue(methods, (each) => each.installed)
+);
+
 export const getSources = (state) => state.data.sources;
 export const getInstalledSources = createSelector(
   getSources,
@@ -68,6 +74,8 @@ export const getTagSignalsArrayBySession = createSelector(
 export const getRawFiles = (state) => state.data.rawFiles;
 
 export const getAnalysisLabels = (state) => state.data.analysisLabels;
+
+export const getAnalysisResults = (state) => state.data.analysisResults;
 
 export const getAnalysisSamples = (state) => state.data.analysisSamples;
 export const getAnalysisSamplesArrayBySession = createSelector(

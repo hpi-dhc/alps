@@ -3,9 +3,9 @@ import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
 import { FormControl, InputLabel, Select, MenuItem, IconButton, makeStyles } from '@material-ui/core';
 import ResetIcon from '@material-ui/icons/Close';
-import { getItems } from '../../selectors/preprocess';
+import { getItems } from '../../selectors/plots';
 import { getTagSignalsArrayBySession } from '../../selectors/data';
-import { setTags } from '../../actions/preprocess';
+import { setTags } from '../../actions/plots';
 
 const useStyles = makeStyles(theme => ({
   container: {

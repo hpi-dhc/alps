@@ -7,6 +7,7 @@ import {
   DATASET_CREATE_SUCCESS,
   SUBJECT_GET_SUCCESS,
   SOURCE_LIST_SUCCESS,
+  PROCESSINGMETHOD_LIST_SUCCESS,
   SESSION_DESTROY_SUCCESS,
   SUBJECT_DESTROY_SUCCESS,
   DATASET_DESTROY_SUCCESS,
@@ -15,6 +16,9 @@ import {
   ANALYSIS_SAMPLE_DESTROY_SUCCESS,
   ANALYSIS_SAMPLE_UPDATE_SUCCESS,
   ANALYSIS_SAMPLE_CREATE_SUCCESS,
+  ANALYSIS_RESULT_LIST_SUCCESS,
+  ANALYSIS_RESULT_CREATE_SUCCESS,
+  ANALYSIS_RESULT_GET_SUCCESS,
 } from '../constants/ActionTypes';
 import { filterObjectByValue } from '../utils';
 
@@ -22,8 +26,10 @@ const initialState = {
   isLoading: false,
   error: null,
   sources: {},
+  processingMethods: {},
   analysisLabels: {},
   analysisSamples: {},
+  analysisResults: {},
   subjects: {},
   sessions: {},
   datasets: {},
@@ -63,6 +69,11 @@ const data = (state = initialState, action) => {
       return {
         ...newState,
         sources: action.payload.entities.sources,
+      };
+    case PROCESSINGMETHOD_LIST_SUCCESS:
+      return {
+        ...newState,
+        processingMethods: action.payload.entities.processingMethods,
       };
     case ANALYSIS_LABEL_CREATE_SUCCESS:
     case ANALYSIS_LABEL_LIST_SUCCESS:
@@ -242,9 +253,41 @@ const data = (state = initialState, action) => {
         analysisSamples,
       };
     }
+    case ANALYSIS_RESULT_LIST_SUCCESS: {
+      return {
+        ...newState,
+        analysisResults: action.payload.entities.analysisResults,
+      };
+    }
+    case ANALYSIS_RESULT_GET_SUCCESS: {
+      return {
+        ...newState,
+        analysisResults: {
+          ...newState.analysisResults,
+          ...action.payload.entities.analysisResults,
+        },
+      };
+    }
+    case ANALYSIS_RESULT_CREATE_SUCCESS: {
+      return {
+        ...newState,
+        analysisResults: {
+          ...filterObjectByValue(
+            newState.analysisResults,
+            filterDanglingAnalysisResultsWith(action.payload.entities.analysisResults)
+          ),
+          ...action.payload.entities.analysisResults,
+        },
+      };
+    }
     default:
       return newState;
   }
 };
 
 export default data;
+
+function filterDanglingAnalysisResultsWith (results) {
+  const labels = Object.values(results).map(each => each.label);
+  return (each) => !labels.includes(each.label) || each.snapshot !== null;
+}

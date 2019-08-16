@@ -62,8 +62,7 @@ class SourceBase(ABC):
         Returns a dict with meta information and parsed signal data.
         Parsed data has to be passed as Series with tz-aware DateTimeIndex.
         Each result must include either a raw_file_id or the parsed data.
-        If no signal type is given and a series is available, it will be set to
-        signal_type.SIGNAL otherwise signal_type.FILE is used.
+        If no signal type is given, it will be set to signal_type.OTHER.
 
         Source file objects can be accessed via self.raw_files.
 
@@ -72,7 +71,9 @@ class SourceBase(ABC):
             'signal_name': {
                 'type': "NNI",
                 'raw_file_id': "4079f31e-5daf-472c-86d4-a2a30142b843",
-                'series': <pandas.Series>
+                'series': <pandas.Series>,
+                'frequency': 51.2,
+                'unit': "Milliseconds"
             },
             ...
         }

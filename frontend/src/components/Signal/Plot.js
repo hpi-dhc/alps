@@ -29,6 +29,7 @@ SignalPlot.propTypes = {
   domainY: PropTypes.array,
   yLabel: PropTypes.string,
   showDots: PropTypes.bool,
+  hideRange: PropTypes.bool,
   onAreaMarked: PropTypes.func,
   onPanEnd: PropTypes.func,
 };
@@ -39,16 +40,18 @@ SignalPlot.defaultProps = {
   analysisSamples: [],
   mode: plotModes.PAN_MODE,
   showDots: false,
+  hideRange: false,
   domainX: [null, null],
   domainY: ['auto', 'auto'],
 };
 
-function SignalPlot ({
+export default function SignalPlot ({
   data,
   tags,
   analysisSamples,
   mode,
   showDots,
+  hideRange,
   domainX: domainXProp,
   domainY,
   yLabel,
@@ -133,7 +136,12 @@ function SignalPlot ({
 
   const renderMarkedArea = () => {
     if (markedArea[0] && markedArea[1]) {
-      return <ReferenceArea x1={markedArea[0]} x2={markedArea[1]} strokeOpacity={0.3} />;
+      return <ReferenceArea
+        x1={markedArea[0]}
+        x2={markedArea[1]}
+        strokeOpacity={0.3}
+        ifOverflow='hidden'
+      />;
     }
   };
 
@@ -154,19 +162,26 @@ function SignalPlot ({
   };
 
   const renderAnalysisSample = (item) => {
+    const color = generateColor(item.label);
     let x1 = new Date(item.start).valueOf();
     let x2 = new Date(item.end).valueOf();
-    if (x1 < domainX[0] && x2 > domainX[0]) x1 = domainX[0];
+
+    if (x1 < domainX[0] && x2 > domainX[0]) {
+      x1 = domainX[0];
+    }
+
+    if (x2 > domainX[1] && x1 < domainX[1]) {
+      x2 = domainX[1];
+    }
 
     return (
       <ReferenceArea
         key={item.id}
         x1={x1}
         x2={x2}
-        fill={generateColor(item.label)}
+        fill={color}
         fillOpacity={0.2}
         stroke={null}
-        ifOverflow='hidden'
       >
         <Label value={labels[item.label].name} position='insideTopLeft' />
       </ReferenceArea>
@@ -209,9 +224,10 @@ function SignalPlot ({
         }
         { analysisSamples.map(renderAnalysisSample) }
         <Area
+          hide={hideRange}
           dataKey='range'
           type='monotoneX'
-          dot={showDots}
+          dot={false}
           fillOpacity={0.3}
           strokeOpacity={0.5}
           isAnimationActive={false}
@@ -234,5 +250,3 @@ function SignalPlot ({
     </ResponsiveContainer>
   );
 }
-
-export default SignalPlot;

@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils import timezone
 
 
 class UUIDModel(models.Model):
@@ -20,8 +21,8 @@ class User(AbstractUser, UUIDModel):
 
 class OwnedModel(models.Model):
     created_at = models.DateTimeField(
-        auto_now_add=True,
         editable=False,
+        default=timezone.now
     )
     user = models.ForeignKey(
         'datasets.User',

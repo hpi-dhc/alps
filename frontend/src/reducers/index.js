@@ -3,13 +3,15 @@ import { LOGOUT_SUCCESS } from '../constants/ActionTypes';
 import app from './app';
 import authentication from './authentication';
 import data from './data';
-import preprocess from './preprocess';
+import preprocess from './plots';
+import analysis from './analysis';
 
 const rootReducer = combineReducers({
   app,
   authentication,
   data,
   preprocess,
+  analysis,
 });
 
 const initialState = rootReducer({}, {});

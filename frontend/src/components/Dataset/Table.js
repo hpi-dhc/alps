@@ -40,6 +40,8 @@ function DatasetTable ({ datasets, onAdd, onDelete }) {
       options={{
         actionsColumnIndex: 6,
         selection: true,
+        pageSize: datasets.length > 10 ? 20 : 10,
+        pageSizeOptions: [10, 20, 50, 100],
       }}
       actions={[
         {

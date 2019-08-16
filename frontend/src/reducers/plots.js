@@ -1,27 +1,27 @@
 import {
-  PREPROCESS_PLOTS_DELETE,
-  PREPROCESS_PLOTS_UPSERT,
-  PREPROCESS_SET_DOMAIN,
-  PREPROCESS_SET_TAGS,
-  PREPROCESS_SET_PLOT_MODE,
+  PLOT_DELETE,
+  PLOT_UPSERT,
+  PLOT_SET_DOMAIN,
+  PLOT_SET_TAGS,
+  PLOT_SET_MODE,
 } from '../constants/ActionTypes';
 import { ZOOM_MODE } from '../constants/PlotModes';
 
-const initialItemState = {
+const initialSessionState = {
   plots: {},
   mainPlot: '',
   tags: '',
   domain: ['auto', 'auto'],
-  plotMode: ZOOM_MODE,
 };
 
 const initialPlotState = {
   dataset: '',
   signal: '',
+  domainY: ['auto', 'auto'],
 };
 
 const initialState = {
-  defaultSettings: {},
+  mode: ZOOM_MODE,
   items: {},
 };
 
@@ -39,12 +39,12 @@ const updateSession = (state, id, func) => {
 
 const preprocess = (state = initialState, action) => {
   switch (action.type) {
-    case PREPROCESS_PLOTS_UPSERT: {
+    case PLOT_UPSERT: {
       return updateSession(state, action.session, (session) => {
         const plots = session ? session.plots : {};
         const plot = plots ? session.plots[action.payload.id] : initialPlotState;
         return {
-          ...initialItemState,
+          ...initialSessionState,
           ...session,
           mainPlot: action.isMainPlot ? action.payload.id : session.mainPlot,
           plots: {
@@ -59,7 +59,7 @@ const preprocess = (state = initialState, action) => {
         };
       });
     }
-    case PREPROCESS_PLOTS_DELETE: {
+    case PLOT_DELETE: {
       delete state.items[action.session].plots[action.id];
       return {
         ...state,
@@ -68,19 +68,19 @@ const preprocess = (state = initialState, action) => {
         },
       };
     }
-    case PREPROCESS_SET_PLOT_MODE: {
-      return updateSession(state, action.session, (session) => ({
-        ...session,
-        plotMode: action.mode,
-      }));
+    case PLOT_SET_MODE: {
+      return {
+        ...state,
+        mode: action.mode,
+      };
     }
-    case PREPROCESS_SET_DOMAIN: {
+    case PLOT_SET_DOMAIN: {
       return updateSession(state, action.session, (session) => ({
         ...session,
         domain: action.domain,
       }));
     }
-    case PREPROCESS_SET_TAGS: {
+    case PLOT_SET_TAGS: {
       return updateSession(state, action.session, (session) => ({
         ...session,
         tags: action.tags,

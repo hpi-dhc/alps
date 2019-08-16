@@ -17,6 +17,7 @@ djangorestframework = "*"
 fastparquet = {git = "https://github.com/dask/fastparquet.git",ref = "master"}
 numpy = "*"
 pandas = "*"
+plotly = "*"
 psycopg2 = "*"
 pyedflib = "*"
 python-snappy = "*"

@@ -2,6 +2,14 @@ from rest_framework import serializers
 
 from . import models
 
+class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
+    def get_queryset(self):
+        request = self.context.get('request', None)
+        queryset = super(UserFilteredPrimaryKeyRelatedField, self).get_queryset()
+        if not request or not queryset:
+            return None
+        return queryset.filter(user=request.user)
+
 
 class AnalysisLabelSerializer(serializers.ModelSerializer):
 
@@ -11,12 +19,49 @@ class AnalysisLabelSerializer(serializers.ModelSerializer):
 
 
 class AnalysisSampleSerializer(serializers.ModelSerializer):
-    label = serializers.PrimaryKeyRelatedField(queryset=models.AnalysisLabel.objects.all())
-    session = serializers.PrimaryKeyRelatedField(queryset=models.Session.objects.all())
+    label = UserFilteredPrimaryKeyRelatedField(queryset=models.AnalysisLabel.objects)
+    session = UserFilteredPrimaryKeyRelatedField(queryset=models.Session.objects)
 
     class Meta:
         model = models.AnalysisSample
         exclude = ('user',)
+
+
+class AnalysisSerializer(serializers.ModelSerializer):
+    signal = UserFilteredPrimaryKeyRelatedField(
+        queryset=models.Signal.objects
+    )
+    label = UserFilteredPrimaryKeyRelatedField(
+        queryset=models.AnalysisLabel.objects
+    )
+    snapshot = UserFilteredPrimaryKeyRelatedField(
+        queryset=models.AnalysisSnapshot,
+        default=None
+    )
+    configuration = serializers.JSONField(default={})
+
+    class Meta:
+        model = models.Analysis
+        exclude = ('user',)
+        read_only_fields = ('result', 'status')
+
+
+class AnalysisSnapshotSerializer(serializers.ModelSerializer):
+    analyses = UserFilteredPrimaryKeyRelatedField(
+        queryset=models.Analysis.objects,
+        many=True
+    )
+
+    class Meta:
+        model = models.AnalysisSnapshot
+        exclude = ('user',)
+
+
+class ProcessingMethodSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.ProcessingMethod
+        exclude = ('classname',)
 
 
 class SignalSerializer(serializers.ModelSerializer):

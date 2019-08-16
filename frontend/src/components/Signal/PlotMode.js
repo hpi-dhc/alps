@@ -1,5 +1,4 @@
 import React, { useCallback } from 'react';
-import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
 import { FormControl, Typography } from '@material-ui/core';
 import { ToggleButtonGroup, ToggleButton } from '@material-ui/lab';
@@ -7,20 +6,16 @@ import PanIcon from '@material-ui/icons/PanTool';
 import ZoomIcon from '@material-ui/icons/ZoomIn';
 import LabelIcon from '@material-ui/icons/Label';
 import * as plotModes from '../../constants/PlotModes';
-import { setPlotMode } from '../../actions/preprocess';
-import { getItems } from '../../selectors/preprocess';
+import { setMode } from '../../actions/plots';
+import { getMode } from '../../selectors/plots';
 
-PlotMode.propTypes = {
-  session: PropTypes.string.isRequired,
-};
-
-export default function PlotMode ({ session, ...props }) {
+export default function PlotMode (props) {
   const dispatch = useDispatch();
-  const preprocess = useSelector(getItems)[session];
+  const mode = useSelector(getMode);
 
-  const handlePlotMode = useCallback((event, newPlotMode) => {
-    dispatch(setPlotMode(session, newPlotMode));
-  }, [dispatch, session]);
+  const handleChange = useCallback((event, mode) => {
+    dispatch(setMode(mode));
+  }, [dispatch]);
 
   return (
     <FormControl {...props}>
@@ -28,8 +23,8 @@ export default function PlotMode ({ session, ...props }) {
         Selection mode
       </Typography>
       <ToggleButtonGroup
-        value={preprocess.plotMode}
-        onChange={handlePlotMode}
+        value={mode}
+        onChange={handleChange}
         exclusive
         size='small'
       >

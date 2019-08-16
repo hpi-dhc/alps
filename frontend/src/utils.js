@@ -1,6 +1,10 @@
 import { useEffect, useRef } from 'react';
 
 export function filterObjectByValue (object, predicate) {
+  if (typeof object !== 'object') {
+    return {};
+  }
+
   return Object.keys(object).reduce((filtered, key) => {
     if (predicate(object[key])) {
       filtered[key] = object[key];

@@ -15,7 +15,7 @@ import ZoomIcon from '@material-ui/icons/ZoomIn';
 
 import * as AnalysisSamples from '../../actions/analysisSamples';
 import { getAnalysisSamplesArrayBySession, getAnalysisLabels } from '../../selectors/data';
-import { setDomain } from '../../actions/preprocess';
+import { setDomain } from '../../actions/plots';
 import AnalysisSampleIcon from './Icon';
 import AnalysisSampleDialog from './Dialog';
 
@@ -77,6 +77,7 @@ export default function AnalysisSampleList ({ session }) {
     return (
       <ListItem
         button
+        disableGutters
         key={item.id}
         title={getItemTitle(item)}
         onClick={() => handleEditSample(item)}

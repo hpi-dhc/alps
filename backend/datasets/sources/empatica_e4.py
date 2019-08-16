@@ -124,8 +124,8 @@ class EmpaticaE4Source(SourceBase):
             start_time = pd.to_datetime(EmpaticaE4Source.read_value(file), unit='s', utc=True)
             values = np.loadtxt(file, delimiter=',', dtype='float64')
 
-        value = values * 1000 # convert from seconds to milliseconds
         df = pd.DataFrame(data=values, columns=['index', 'ibi'])
+        df['ibi'] = df['ibi'] * 1000 # convert seconds to milliseonds
         df['index'] = df['index'].apply(lambda x: start_time + pd.Timedelta(x, unit='s'))
         df.set_index('index', inplace=True)
 
