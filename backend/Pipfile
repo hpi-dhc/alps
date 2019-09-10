@@ -9,12 +9,14 @@ pylint = "*"
 pylint-django = "*"
 
 [packages]
+astropy = "*"
 celery = "*"
 django = "*"
 django-cors-headers = "*"
 django-rest-auth = "*"
 djangorestframework = "*"
 fastparquet = {git = "https://github.com/dask/fastparquet.git",ref = "master"}
+jointly = "*"
 numpy = "*"
 pandas = "*"
 plotly = "*"
