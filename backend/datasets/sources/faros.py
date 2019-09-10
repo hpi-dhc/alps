@@ -39,7 +39,7 @@ class FarosSource(SourceBase):
     def parse(self):
         dtypes = {
             'ECG': np.int16,
-            'HRV': pd.UInt16Dtype, # allows for NaN values
+            'HRV': np.int16, # allows for NaN values
             'Accelerometer_X': np.int16,
             'Accelerometer_Y': np.int16,
             'Accelerometer_Z': np.int16,
@@ -71,7 +71,7 @@ class FarosSource(SourceBase):
             freq=freq_acc
         )
 
-        data['HRV'].replace(0, None, inplace=True)
+        data['HRV'] = data['HRV'].replace(0, np.nan).dropna()
 
         for label in data.keys():
             data[label] = data[label].tz_localize('UTC', copy=False)
