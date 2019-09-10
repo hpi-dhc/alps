@@ -45,7 +45,7 @@ class TimeDomainAnalysis(AnalysisMethodBase):
 
     @classmethod
     def name(cls):
-        return 'Time Domain'
+        return 'HRV Time Domain'
 
     @classmethod
     def domain(cls):
@@ -108,9 +108,17 @@ class TimeDomainAnalysis(AnalysisMethodBase):
         for n in range(hist_max_index):
             for m in reversed(range(hist_max_index + 1, len(hist))):
                 # Create triangular interpolation function for n and m
-                tri_interp = interp1d([n, hist_max_index, m], [0, hist[hist_max_index], 0], bounds_error=False, fill_value=0)
+                tri_interp = interp1d(
+                    [n, hist_max_index, m],
+                    [0, hist[hist_max_index], 0],
+                    bounds_error=False,
+                    fill_value=0
+                )
                 # Square difference of histogram and triangle
-                error = np.trapz([(hist[t] - tri_interp(t)) ** 2 for t in nonzero_indices])
+                error = np.trapz(
+                    [(hist[t] - tri_interp(t)) ** 2 for t in nonzero_indices],
+                    [hist_bins[t] for t in nonzero_indices]
+                )
                 if min_error > error:
                     min_n = n
                     min_m = m
@@ -125,7 +133,7 @@ class TimeDomainAnalysis(AnalysisMethodBase):
             'Max HR': [rolling_mean_hr.max(), 'bpm'],
             'Min HR': [rolling_mean_hr.min(), 'bpm'],
             'STD HR': [instantaneous_hr.std(), 'bpm'],
-            'SDNN': [ibi_series.std(), 'ms'],
+            'SDNN': [np.std(ibi_series), 'ms'],
             'SDNN index': [rolling_24h.std().mean(), 'ms'],
             'SDANN': [rolling_24h.mean().std(), 'ms'],
             'RMSSD': [np.sqrt(np.mean(nn_diff ** 2)), 'ms'],
@@ -144,6 +152,7 @@ class TimeDomainAnalysis(AnalysisMethodBase):
 
         distribution_plot = go.Figure(
             layout={
+                'xaxis_title_text': 'IBI (ms)',
                 'title_text': 'Distribution',
                 'legend_orientation': 'h',
             }
