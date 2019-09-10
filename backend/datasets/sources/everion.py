@@ -1,10 +1,8 @@
 import re
 import pandas as pd
 import numpy as np
-from datetime import datetime
 
 from datasets.constants import signal_types
-from datasets.utils import create_df
 from datasets.sources.source_base import SourceBase
 
 import logging
@@ -171,6 +169,63 @@ class EverionSource(SourceBase):
             chunksize=100000
         )
 
+    @staticmethod
+    def split_data(df, predicate):
+        df = df.copy()
+        df_split = []
+        split_at = df[predicate(df)]['count'].unique()
+        for index, count in enumerate(split_at):
+            selected = df['count'] <= count
+            if index > 0:
+                selected = selected & (df['count'] > split_at[index - 1])
+            df_split.append(df[selected])
+        # Append last segment
+        df_split.append(df[df['count'] > split_at[-1]])
+
+        assert np.sum([len(part) for part in df_split]) == len(df)
+
+        return [part for part in df_split if not part.empty]
+
+    @classmethod
+    def create_time_lookup_for_ibi(cls, path, max_deviation=15, threshold=600):
+        df = pd.DataFrame()
+        df_iterator = cls.get_dataframe_iterator(path, ['tag', 'count', 'time', 'values'])
+
+        # append data from csv in chunks and drop duplicates
+        for chunk in df_iterator:
+            chunk.drop_duplicates(subset=['count', 'tag'], inplace=True)
+            chunk = chunk[chunk['tag'] == 14]
+            chunk = cls.extend_values(chunk)
+            chunk = chunk[chunk['value2'] <= max_deviation]
+            chunk.drop('value2', axis='columns', inplace=True)
+            chunk['value'] = chunk['value'].astype('uint16')
+            df = pd.concat([df, chunk], sort=False)
+
+        df.drop_duplicates(subset=['count', 'tag'], inplace=True)
+        df.sort_values(['tag', 'count'], inplace=True)
+        df.reset_index(drop=True, inplace=True)
+
+        # split dataframes in consecutive parts
+        df_split = cls.split_data(
+            df,
+            lambda x: x['time'].shift(-1, fill_value=x['time'].max()) - x['time'] - pd.to_timedelta(x['value'].shift(-1, fill_value=0), 'ms') > pd.to_timedelta(x['value'] + threshold, 'ms')
+        )
+
+        # calculate correct time and concatenate split dataframes
+        df = pd.DataFrame()
+        for each in df_split:
+            start_time = each['time'].min()
+            each['seconds'] = pd.Series(each['value'].cumsum(), dtype='uint32')
+            each['seconds'] = each['seconds'].shift(1, fill_value=0)
+            each['seconds'] = pd.to_timedelta(each['seconds'], unit='ms')
+            each['time'] = each['seconds'] + start_time
+            each.drop(['seconds'], axis='columns', inplace=True)
+            df = pd.concat([df, each])
+
+        df.reset_index(drop=True, inplace=True)
+
+        return df[['tag', 'count', 'time']]
+
     @classmethod
     def create_time_lookup(cls, path, tag):
         if isinstance(tag, int):
@@ -178,38 +233,62 @@ class EverionSource(SourceBase):
         elif not isinstance(tag, list):
             raise TypeError(f'Expected tag to be int or list, but got {type(tag)}')
 
-        df = pd.DataFrame()
-        df_iterator = cls.get_dataframe_iterator(path, ['tag', 'count', 'time'])
+        includes_interbeat_interval = 14 in tag
+        if includes_interbeat_interval:
+            tag = [value for value in tag if value != 14]
 
-        # append data from csv in chunks and drop duplicates
-        for chunk in df_iterator:
-            chunk.drop_duplicates(subset=['count', 'tag'], inplace=True)
-            subset = chunk['tag'].isin(tag)
-            df = pd.concat([df, chunk[subset]])
+        df = pd.DataFrame(columns=['tag', 'count', 'time'])
 
-        # drop missed duplicates
-        df.drop_duplicates(subset=['count', 'tag'], inplace=True)
-        df.sort_values(['tag', 'count'], inplace=True)
+        if tag:
+            df_iterator = cls.get_dataframe_iterator(path, ['tag', 'count', 'time'])
 
-        samples_per_sec = df.groupby(['tag', 'time']).count()
-        frequency = samples_per_sec.groupby('tag').mean()['count']
-        frequency.rename('frequency', inplace=True)
-        frequency = frequency.round(1)
+            # append data from csv in chunks and drop duplicates
+            for chunk in df_iterator:
+                chunk.drop_duplicates(subset=['count', 'tag'], inplace=True)
+                subset = chunk['tag'].isin(tag)
+                df = pd.concat([df, chunk[subset]], sort=False)
 
-        if any(value != 1 for value in frequency.values):
-            # drop first second, since it's probably not complete
-            start_time = df['time'].min()
-            df = df[df['time'] > start_time]
+            # drop missed duplicates
+            df.drop_duplicates(subset=['count', 'tag'], inplace=True)
+            df.sort_values(['tag', 'count'], inplace=True)
+            df.reset_index(inplace=True, drop=True)
 
-            # get minimum time and count values for each tag
-            reference = df.groupby('tag').min()
+            # calculate number of samples per second precision timestamp
+            samples_per_ts = df.reset_index().groupby(['tag', 'time']).count()
+            mean_spt = samples_per_ts.groupby('tag').mean()['count']
+            mean_spt.rename('mean_spt', inplace=True)
+            mean_spt = mean_spt.round(1)
+            high_freq_tags = list(mean_spt[mean_spt > 1].index)
 
-            # calculate correct sample time
-            df = df.merge(reference, left_on='tag', right_on='tag', suffixes=('', '_start'), copy=False)
-            df['frequency'] = df['tag'].map(frequency)
-            df['time'] = df['time_start'] + pd.to_timedelta((df['count'] - df['count_start']) / df['frequency'], unit='s')
+            # Calculate timestamps for signals with frequency higher than 1 Hz
+            if high_freq_tags:
+                df_split = cls.split_data(
+                    df,
+                    lambda x: x['time'].shift(-1, fill_value=x['time'].max()) - x['time'] > pd.Timedelta(1, 's')
+                )
 
-        # Necessary for some cases, device hiccup?
+                df = pd.DataFrame()
+                for part in df_split:
+                    # drop first second, since it's probably not complete
+                    hft_subset = part['tag'].isin(high_freq_tags)
+                    time_min = part[hft_subset]['time'].min()
+                    part_hft = part[hft_subset & (part['time'] > time_min)]
+
+                    # get start time and min count for each tag
+                    start = part_hft.groupby('tag').min()
+
+                    # calculate correct sample time based on count_start and time_start
+                    part_hft = part_hft.merge(start, left_on='tag', right_on='tag', suffixes=('', '_start'), copy=False)
+                    part_hft['frequency'] = part_hft['tag'].map(mean_spt)
+                    part_hft['time'] = part_hft['time_start'] + pd.to_timedelta((part_hft['count'] - part_hft['count_start']) / part_hft['frequency'], unit='s')
+                    df = pd.concat([df, part[~hft_subset], part_hft], sort=False)
+                df.reset_index(drop=True, inplace=True)
+
+        if includes_interbeat_interval:
+            lookup_ibi = cls.create_time_lookup_for_ibi(path)
+            df = pd.concat([df, lookup_ibi], sort=False)
+            df.reset_index(drop=True, inplace=True)
+
         df.drop_duplicates(['tag', 'time'], inplace=True)
 
         return df[['tag', 'count', 'time']]
