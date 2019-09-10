@@ -8,24 +8,20 @@ import AddIcon from '@material-ui/icons/Add';
 import SignalCard from '../components/Signal/Card';
 import { filterObjectByValue } from '../utils';
 
-import { getSessions, getSignals, getDatasets, getIBISignals } from '../selectors/data';
-import { getItems, getMode } from '../selectors/plots';
+import { getSessions, getIBISignals } from '../selectors/data';
+import { getMode } from '../selectors/plots';
 import * as Plots from '../actions/plots';
 import * as Sessions from '../actions/sessions';
 import * as AnalysisSamples from '../actions/analysisSamples';
 import * as plotModes from '../constants/PlotModes';
 import AnalysisSampleDialog from '../components/AnalysisSample/Dialog';
+import { usePlots } from '../components/Signal/hooks';
 
 function SessionPreprocess ({ match }) {
   const sessionId = match.params.sessionId;
   const session = useSelector(getSessions)[sessionId];
-  const datasets = useSelector((state) => {
-    const allDatasets = getDatasets(state);
-    return filterObjectByValue(allDatasets, each => each.session === sessionId);
-  });
-  const signals = useSelector(getSignals);
+  const { plots, datasets, signals } = usePlots(sessionId);
   const ibiSignals = useSelector(getIBISignals);
-  const preprocess = useSelector((state) => getItems(state)[sessionId]);
   const plotMode = useSelector(getMode);
   const [isSampleDialogOpen, setSampleDialogOpen] = useState(false);
   const [markedArea, setMarkedArea] = useState([null, null]);
@@ -35,20 +31,6 @@ function SessionPreprocess ({ match }) {
   useEffect(() => {
     dispatch(Sessions.get(sessionId));
   }, [dispatch, sessionId]);
-
-  useEffect(() => {
-    if (!preprocess) {
-      // determine initial domain to fit all signals
-      const sessionSignals = Object.values(datasets).reduce((array, each) => [...array, ...each.signals], []);
-      const timestamps = sessionSignals.reduce((object, each) => ({
-        from: [...object.from, new Date(signals[each].first_timestamp).valueOf()],
-        to: [...object.from, new Date(signals[each].last_timestamp).valueOf()],
-      }), { from: [], to: [] });
-      const domain = [Math.min(...timestamps.from), Math.max(...timestamps.to)];
-      dispatch(Plots.setDomain(sessionId, domain));
-      dispatch(Plots.upsert(sessionId, { id: uuid() }, true));
-    }
-  }, [datasets, dispatch, preprocess, sessionId, signals]);
 
   const handleCreatePlot = useCallback(
     () => {
@@ -89,7 +71,7 @@ function SessionPreprocess ({ match }) {
   }, [dispatch, sessionId]);
 
   const renderMainSignalCard = () => {
-    const plot = preprocess.plots[preprocess.mainPlot];
+    const plot = plots.plots[plots.mainPlot];
     return (
       <Grid item key={plot.id} style={{ position: 'sticky', top: 130, zIndex: 1000 }}>
         <SignalCard
@@ -97,9 +79,9 @@ function SessionPreprocess ({ match }) {
           signals={ibiSignals}
           plot={plot}
           elevation={6}
-          tagSignal={preprocess.tags}
+          tagSignal={plots.tags}
           plotProps={{
-            domainX: preprocess.domain,
+            domainX: plots.domain,
             onAreaMarked: handleAreaMarked,
             mode: plotMode,
           }}
@@ -109,19 +91,19 @@ function SessionPreprocess ({ match }) {
   };
 
   const renderSignalCards = () => {
-    if (!preprocess) return;
-    const plots = filterObjectByValue(preprocess.plots, (each) => each.id !== preprocess.mainPlot);
-    return Object.values(plots).map(plot => {
+    if (!plots) return;
+    const contextPlots = filterObjectByValue(plots.plots, (each) => each.id !== plots.mainPlot);
+    return Object.values(contextPlots).map(plot => {
       return (
         <Grid item key={plot.id}>
           <SignalCard
             datasets={datasets}
             signals={signals}
             plot={plot}
-            tagSignal={preprocess.tags}
+            tagSignal={plots.tags}
             closable
             plotProps={{
-              domainX: preprocess.domain,
+              domainX: plots.domain,
               onAreaMarked: handleAreaMarked,
               mode: plotMode,
             }}
@@ -131,7 +113,7 @@ function SessionPreprocess ({ match }) {
     });
   };
 
-  if (!session || !preprocess) {
+  if (!session || !plots) {
     return <div />;
   }
 

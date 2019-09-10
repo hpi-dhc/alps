@@ -18,6 +18,13 @@ const useStyles = makeStyles(theme => ({
     border: '1px solid',
     borderColor: 'rgba(0, 0, 0, 0.12)',
     borderRadius: theme.spacing(1),
+    padding: theme.spacing(2),
+  },
+  option: {
+    marginBottom: theme.spacing(1),
+    '&:last-child': {
+      marginBottom: 0,
+    },
   },
   rangeSpacer: {
     marginRight: theme.spacing(1),
@@ -58,7 +65,14 @@ export default function OptionsGroup ({ id, item, values, onChange }) {
   const renderOption = ([key, item]) => {
     const Component = getComponent(item.type);
     const composedId = id ? `${id}-${key}` : key;
-    return <Component key={key} id={composedId} item={item} onChange={onChange} values={values} />;
+    return <Component
+      key={key}
+      id={composedId}
+      item={item}
+      onChange={onChange}
+      values={values}
+      className={classes.option}
+    />;
   };
 
   return (
@@ -70,7 +84,7 @@ export default function OptionsGroup ({ id, item, values, onChange }) {
 
 OptionsBoolean.propTypes = OptionsPropTypes;
 OptionsBoolean.defaultProps = { values: {} };
-export function OptionsBoolean ({ id, item, values, onChange }) {
+export function OptionsBoolean ({ id, item, values, onChange, ...rest }) {
   const checked = typeof values[id] !== 'undefined' ? values[id] : item.default;
 
   const handleChange = (event, checked) => {
@@ -78,7 +92,7 @@ export function OptionsBoolean ({ id, item, values, onChange }) {
   };
 
   return (
-    <Box display='flex' alignItems='center'>
+    <Box display='flex' alignItems='center' {...rest}>
       <Checkbox
         checked={checked}
         onChange={handleChange}
@@ -92,8 +106,8 @@ export function OptionsBoolean ({ id, item, values, onChange }) {
 
 OptionsNumber.propTypes = OptionsPropTypes;
 OptionsNumber.defaultProps = { values: {} };
-export function OptionsNumber ({ id, item, values, onChange }) {
-  const value = values[id] ? values[id] : item.default;
+export function OptionsNumber ({ id, item, values, onChange, ...rest }) {
+  const value = typeof values[id] !== 'undefined' ? values[id] : item.default;
 
   let inputProps = {};
   if (item.limits) {
@@ -108,7 +122,7 @@ export function OptionsNumber ({ id, item, values, onChange }) {
   };
 
   return (
-    <Box display='flex' alignItems='center'>
+    <Box display='flex' alignItems='center' {...rest}>
       <FormControl fullWidth>
         <InputLabel>{item.title}</InputLabel>
         <Input
@@ -129,7 +143,7 @@ export function OptionsNumber ({ id, item, values, onChange }) {
 
 OptionsRange.propTypes = OptionsPropTypes;
 OptionsRange.defaultProps = { values: {} };
-export function OptionsRange ({ id, item, values: valuesProp, onChange }) {
+export function OptionsRange ({ id, item, values: valuesProp, onChange, ...rest }) {
   const classes = useStyles();
   const values = valuesProp[id] ? valuesProp[id] : item.default;
 
@@ -149,7 +163,7 @@ export function OptionsRange ({ id, item, values: valuesProp, onChange }) {
   };
 
   return (
-    <div>
+    <div {...rest}>
       <Typography variant='caption' color='textSecondary'>{item.title}</Typography>
       <Box display='flex' alignItems='center'>
         <FormControl required fullWidth>
@@ -190,7 +204,7 @@ export function OptionsRange ({ id, item, values: valuesProp, onChange }) {
 
 OptionsSelect.propTypes = OptionsPropTypes;
 OptionsSelect.defaultProps = { values: {} };
-export function OptionsSelect ({ id, item, values, onChange }) {
+export function OptionsSelect ({ id, item, values, onChange, ...rest }) {
   const value = values[id] ? values[id] : item.default;
 
   const handleChange = (event) => {
@@ -198,7 +212,7 @@ export function OptionsSelect ({ id, item, values, onChange }) {
   };
 
   return (
-    <FormControl>
+    <FormControl {...rest}>
       <InputLabel>{item.title}</InputLabel>
       <Select
         value={value}

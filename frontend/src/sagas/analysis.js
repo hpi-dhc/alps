@@ -3,6 +3,7 @@ import { normalize } from 'normalizr';
 import * as ActionTypes from '../constants/ActionTypes';
 import * as Schemas from '../schemas';
 import * as Api from '../api/analysis';
+import * as AnalysisSnapshots from '../actions/analysisSnapshots';
 import { getMethodConfigurations, getSelectedMethods, getSelectedLabel, getSelectedSignals } from '../selectors/analysis';
 
 function * handleRunAnalysis (action) {
@@ -23,6 +24,7 @@ function * handleRunAnalysis (action) {
     const response = yield call(Api.create, payload);
     const data = normalize(response.data, [Schemas.analysisResult]);
     yield put({ type: ActionTypes.ANALYSIS_RESULT_CREATE_SUCCESS, payload: data });
+    yield put(AnalysisSnapshots.select(null));
   } catch (error) {
     yield put({ type: ActionTypes.ANALYSIS_RESULT_FAILURE, payload: error });
   }

@@ -1,7 +1,9 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { Tabs, Tab, Divider } from '@material-ui/core';
+import { getSessions } from '../../selectors/data';
 
 const LinkTab = ({ value, ...props }) => {
   return (
@@ -19,6 +21,8 @@ LinkTab.propTypes = {
 };
 
 const SessionToolbar = ({ match, location }) => {
+  const session = useSelector(getSessions)[match.params.sessionId];
+  const sessionAvailable = Boolean(session);
   const getUrl = (to) => {
     const url = `/sessions/${match.params.sessionId}`;
     return to ? `${url}/${to}` : url;
@@ -35,14 +39,17 @@ const SessionToolbar = ({ match, location }) => {
         <LinkTab
           label='Synchronization'
           value={getUrl('sync')}
+          disabled={!sessionAvailable || session.datasets.length < 2}
         />
         <LinkTab
           label='Preprocessing'
           value={getUrl('preprocess')}
+          disabled={!sessionAvailable}
         />
         <LinkTab
           label='Analysis'
           value={getUrl('analyse')}
+          disabled={!sessionAvailable}
         />
       </Tabs>
     </React.Fragment>

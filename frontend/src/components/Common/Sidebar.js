@@ -12,8 +12,7 @@ const useStyles = makeStyles(theme => ({
     overflowY: 'scroll',
   },
   appBarSpacer: {
-    ...theme.mixins.toolbar,
-    height: theme.mixins.toolbar.minHeight * 2 + theme.spacing(3), // TODO: Make responsive
+    minHeight: theme.mixins.toolbar.minHeight * 2 + theme.spacing(3), // TODO: Make responsive
   },
   drawerPaper: {
     width: drawerWidth,

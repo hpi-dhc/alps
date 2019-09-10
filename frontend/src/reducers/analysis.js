@@ -1,5 +1,6 @@
 import {
   ANALYSIS_LABEL_SELECT,
+  ANALYSIS_SNAPSHOT_SELECT,
   ANALYSIS_METHOD_CONFIG_SET,
   ANALYSIS_METHOD_ADD,
   ANALYSIS_METHOD_REMOVE,
@@ -9,7 +10,8 @@ import {
 } from '../constants/ActionTypes';
 
 const initialState = {
-  selectedLabel: '',
+  selectedSnapshot: null,
+  selectedLabel: null,
   selectedSignals: [],
   selectedMethods: [],
   methodConfigurations: {},
@@ -43,6 +45,11 @@ const analysis = (state = initialState, action) => {
       return {
         ...state,
         selectedLabel: action.id,
+      };
+    case ANALYSIS_SNAPSHOT_SELECT:
+      return {
+        ...state,
+        selectedSnapshot: action.id,
       };
     case ANALYSIS_METHOD_CONFIG_SET:
       return {

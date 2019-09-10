@@ -77,13 +77,15 @@ export const getAnalysisLabels = (state) => state.data.analysisLabels;
 
 export const getAnalysisResults = (state) => state.data.analysisResults;
 
+export const getAnalysisSnapshots = (state) => state.data.analysisSnapshots;
+
 export const getAnalysisSamples = (state) => state.data.analysisSamples;
 export const getAnalysisSamplesArrayBySession = createSelector(
   getSessions, getAnalysisSamples,
   (sessions, analysisSamples) => {
     return Object.values(sessions).reduce((analysisSamplesBySession, session) => ({
       ...analysisSamplesBySession,
-      [session.id]: session.analysisSamples.reduce((sessionAnalysisSamples, each) => {
+      [session.id]: (session.analysisSamples || []).reduce((sessionAnalysisSamples, each) => {
         if (analysisSamples[each]) sessionAnalysisSamples.push(analysisSamples[each]);
         return sessionAnalysisSamples;
       }, []),

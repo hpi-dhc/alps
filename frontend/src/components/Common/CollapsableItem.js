@@ -11,11 +11,15 @@ import {
   ListItemIcon,
 } from '@material-ui/core';
 import ArrowDownIcon from '@material-ui/icons/ArrowDropDown';
+import { tsObjectKeyword } from '@babel/types';
 
 const useStyles = makeStyles(theme => ({
   item: {
     flexDirection: 'column',
     alignItems: 'stretch',
+  },
+  itemIcon: {
+    minWidth: 0,
   },
   itemTitle: {
     display: 'flex',
@@ -24,7 +28,15 @@ const useStyles = makeStyles(theme => ({
     alignItems: 'center',
   },
   action: {
-    top: '24px',
+    top: theme.spacing(3),
+    right: -theme.spacing(1),
+  },
+  downIcon: {
+    transform: 'rotate(180deg)',
+    transition: 'transform .5s',
+  },
+  downIconCollapsed: {
+    transition: 'transform .5s',
   },
 }));
 
@@ -50,7 +62,7 @@ export default function CollapsableItem ({ title, checked, onChange, children, .
   return (
     <ListItem className={classes.item} {...props}>
       <div className={classes.itemTitle}>
-        <ListItemIcon>
+        <ListItemIcon className={classes.itemIcon}>
           <Checkbox
             edge='start'
             checked={checked}
@@ -61,7 +73,7 @@ export default function CollapsableItem ({ title, checked, onChange, children, .
         <ListItemText>{title}</ListItemText>
         <ListItemSecondaryAction className={classes.action} hidden={!children}>
           <IconButton onClick={handleToggleCollapsed}>
-            <ArrowDownIcon />
+            <ArrowDownIcon className={collapsed ? classes.downIconCollapsed : classes.downIcon} />
           </IconButton>
         </ListItemSecondaryAction>
       </div>

@@ -8,18 +8,18 @@ import theme from '../theme';
 import AppBar from '../components/Common/AppBar';
 import SessionToolbar from '../components/Session/Toolbar';
 
-import Sidebar from '../components/Common/Sidebar';
-
 import SubjectList from './SubjectList';
 import SubjectDetail from './SubjectDetail';
 import SessionDetail from './SessionDetail';
+import SessionSync from './SessionSync';
 import SessionPreprocess from './SessionPreprocess';
+import SessionAnalysis from './SessionAnalysis';
+
+import Sidebar from '../components/Common/Sidebar';
 import PreprocessSidebar from '../components/Preprocess/Sidebar';
-import BuildIcon from '@material-ui/icons/Build';
+import AnalysisSidebar from '../components/Analysis/Sidebar';
 
 import { getIsLoading } from '../selectors/data';
-import SessionAnalysis from './SessionAnalysis';
-import AnalysisSidebar from '../components/Analysis/Sidebar';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -71,7 +71,7 @@ export default () => {
               <Route exact path={'/'} component={SubjectList} />
               <Route path='/subjects/:subjectId' component={SubjectDetail} />
               <Route exact path={'/sessions/:sessionId'} component={SessionDetail} />
-              <Route path={'/sessions/:sessionId/sync'} component={BuildIcon} />
+              <Route path={'/sessions/:sessionId/sync'} component={SessionSync} />
               <Route path={'/sessions/:sessionId/preprocess'} component={SessionPreprocess} />
               <Route path={'/sessions/:sessionId/analyse'} component={SessionAnalysis} />
               <Redirect to='/' />

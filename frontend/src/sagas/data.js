@@ -10,6 +10,7 @@ import * as Datasets from '../api/datasets';
 import * as AnalysisLabels from '../api/analysisLabels';
 import * as AnalysisSamples from '../api/analysisSamples';
 import * as Analysis from '../api/analysis';
+import * as AnalysisSnapshots from '../api/analysisSnapshots';
 
 function * handleSourceListRequest (action) {
   try {
@@ -197,7 +198,7 @@ function * handleAnalysisLabelListRequest (action) {
 
 // Analysis Samples
 
-function * handleAnalysisSampleRequest (action) {
+function * handleAnalysisSampleCreateRequest (action) {
   try {
     let payload = action.payload;
     if (action.isNewLabel) {
@@ -254,6 +255,19 @@ function * handleAnalysisResultListRequest (action) {
   }
 }
 
+function * handleAnalysisSnapshotListRequest (action) {
+  try {
+    const session = action.session;
+    const response = yield call(AnalysisSnapshots.list, session);
+    const result = normalize(response.data, [Schemas.analysisSnapshot]);
+    yield put({ type: ActionTypes.ANALYSIS_SNAPSHOT_LIST_SUCCESS, payload: result });
+  } catch (error) {
+    console.log(error);
+    const payload = error.response;
+    yield put({ type: ActionTypes.ANALYSIS_SNAPSHOT_FAILURE, payload });
+  }
+}
+
 export default function * dataSaga () {
   yield all([
     takeEvery(ActionTypes.PROCESSINGMETHOD_LIST_REQUEST, handleProcessingMethodListRequest),
@@ -270,9 +284,10 @@ export default function * dataSaga () {
     takeEvery(ActionTypes.DATASET_CREATE_REQUEST, handleDatasetCreateRequest),
     takeEvery(ActionTypes.DATASET_DESTROY_REQUEST, handleDatasetDestroyRequest),
     takeEvery(ActionTypes.ANALYSIS_LABEL_LIST_REQUEST, handleAnalysisLabelListRequest),
-    takeEvery(ActionTypes.ANALYSIS_SAMPLE_CREATE_REQUEST, handleAnalysisSampleRequest),
+    takeEvery(ActionTypes.ANALYSIS_SAMPLE_CREATE_REQUEST, handleAnalysisSampleCreateRequest),
     takeEvery(ActionTypes.ANALYSIS_SAMPLE_UPDATE_REQUEST, handleAnalysisSampleUpdateRequest),
     takeEvery(ActionTypes.ANALYSIS_SAMPLE_DESTROY_REQUEST, handleAnalysisSampleDestroyRequest),
     takeEvery(ActionTypes.ANALYSIS_RESULT_LIST_REQUEST, handleAnalysisResultListRequest),
+    takeEvery(ActionTypes.ANALYSIS_SNAPSHOT_LIST_REQUEST, handleAnalysisSnapshotListRequest),
   ]);
 }

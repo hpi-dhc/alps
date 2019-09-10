@@ -16,6 +16,7 @@ import LabelSelect from './LabelSelect';
 import { ANALYSIS_RUN } from '../../constants/ActionTypes';
 import { canRunAnalysis } from '../../selectors/analysis';
 import SignalSelect from './SignalSelect';
+import SnapshotSelect from './SnapshotSelect';
 
 const useStyles = makeStyles(theme => ({
   divider: {
@@ -23,7 +24,8 @@ const useStyles = makeStyles(theme => ({
     marginBottom: theme.spacing(2),
   },
   runButton: {
-    position: 'absolute',
+    position: 'sticky',
+    marginTop: theme.spacing(3),
     bottom: theme.spacing(2),
     width: `calc(100% - ${theme.spacing(4)}px)`,
     left: theme.spacing(2),
@@ -54,7 +56,9 @@ function AnalysisSidebar ({ match }) {
   return (
     <React.Fragment>
       <Container>
-        <PlotMode />
+        <PlotMode hideLabel />
+        <Divider className={classes.divider} />
+        <SnapshotSelect session={sessionId} />
         <Divider className={classes.divider} />
         <LabelSelect session={sessionId} inputLabel='Label' />
         <Divider className={classes.divider} />

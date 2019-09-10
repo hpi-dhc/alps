@@ -17,17 +17,22 @@ class AuthGate extends Component {
   static propTypes = {
     initApp: PropTypes.func.isRequired,
     isAuthenticated: PropTypes.bool.isRequired,
+    history: PropTypes.object.isRequired,
   }
 
   componentDidMount () {
     if (this.props.isAuthenticated) {
       this.props.initApp();
+    } else if (this.props.history.location.pathname !== '/') {
+      this.props.history.push('/');
     }
   }
 
   componentWillReceiveProps (nextProps) {
     if (!this.props.isAuthenticated && nextProps.isAuthenticated) {
       nextProps.initApp();
+    } else if (this.props.isAuthenticated && !nextProps.isAuthenticated) {
+      this.props.history.push('/');
     }
   }
 

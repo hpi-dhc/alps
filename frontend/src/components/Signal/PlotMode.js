@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
 import { FormControl, Typography } from '@material-ui/core';
 import { ToggleButtonGroup, ToggleButton } from '@material-ui/lab';
@@ -9,7 +10,19 @@ import * as plotModes from '../../constants/PlotModes';
 import { setMode } from '../../actions/plots';
 import { getMode } from '../../selectors/plots';
 
-export default function PlotMode (props) {
+PlotMode.propTypes = {
+  hideZoom: PropTypes.bool,
+  hidePan: PropTypes.bool,
+  hideLabel: PropTypes.bool,
+};
+
+PlotMode.defaultProps = {
+  hideZoom: false,
+  hidePan: false,
+  hideLabel: false,
+};
+
+export default function PlotMode ({ hideZoom, hidePan, hideLabel, ...props }) {
   const dispatch = useDispatch();
   const mode = useSelector(getMode);
 
@@ -28,9 +41,30 @@ export default function PlotMode (props) {
         exclusive
         size='small'
       >
-        <ToggleButton value={plotModes.ZOOM_MODE} title='Zoom'><ZoomIcon fontSize='small' /></ToggleButton>
-        <ToggleButton value={plotModes.PAN_MODE} title='Pan'><PanIcon fontSize='small' /></ToggleButton>
-        <ToggleButton value={plotModes.LABEL_MODE} title='Add analysis sample'><LabelIcon fontSize='small' /></ToggleButton>
+        { !hideZoom &&
+          <ToggleButton
+            value={plotModes.ZOOM_MODE}
+            title='Zoom'
+          >
+            <ZoomIcon fontSize='small' />
+          </ToggleButton>
+        }
+        { !hidePan &&
+          <ToggleButton
+            value={plotModes.PAN_MODE}
+            title='Pan'
+          >
+            <PanIcon fontSize='small' />
+          </ToggleButton>
+        }
+        { !hideLabel &&
+          <ToggleButton
+            value={plotModes.LABEL_MODE}
+            title='Add analysis sample'
+          >
+            <LabelIcon fontSize='small' />
+          </ToggleButton>
+        }
       </ToggleButtonGroup>
     </FormControl>
   );

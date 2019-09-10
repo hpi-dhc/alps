@@ -25,10 +25,10 @@ PreprocessSidebar.propTypes = {
 
 function PreprocessSidebar ({ match }) {
   const { sessionId } = match.params;
-  const preprocess = useSelector(getItems)[sessionId];
+  const plots = useSelector(getItems)[sessionId];
   const classes = useStyles();
 
-  if (!preprocess) {
+  if (!plots) {
     return <div />;
   }
 

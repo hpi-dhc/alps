@@ -4,6 +4,8 @@ export const processingMethod = new schema.Entity('processingMethods');
 
 export const source = new schema.Entity('sources');
 
+export const analysisSnapshot = new schema.Entity('analysisSnapshots');
+
 export const analysisLabel = new schema.Entity('analysisLabels');
 
 export const analysisSample = new schema.Entity('analysisSamples');

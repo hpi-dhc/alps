@@ -19,6 +19,7 @@ import {
   ANALYSIS_RESULT_LIST_SUCCESS,
   ANALYSIS_RESULT_CREATE_SUCCESS,
   ANALYSIS_RESULT_GET_SUCCESS,
+  ANALYSIS_SNAPSHOT_LIST_SUCCESS,
 } from '../constants/ActionTypes';
 import { filterObjectByValue } from '../utils';
 
@@ -30,6 +31,7 @@ const initialState = {
   analysisLabels: {},
   analysisSamples: {},
   analysisResults: {},
+  analysisSnapshots: {},
   subjects: {},
   sessions: {},
   datasets: {},
@@ -278,6 +280,12 @@ const data = (state = initialState, action) => {
           ),
           ...action.payload.entities.analysisResults,
         },
+      };
+    }
+    case ANALYSIS_SNAPSHOT_LIST_SUCCESS: {
+      return {
+        ...newState,
+        analysisSnapshots: action.payload.entities.analysisSnapshots,
       };
     }
     default:
