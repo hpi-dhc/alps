@@ -269,10 +269,16 @@ class EverionSource(SourceBase):
 
                 df = pd.DataFrame()
                 for part in df_split:
-                    # drop first second, since it's probably not complete
                     hft_subset = part['tag'].isin(high_freq_tags)
-                    time_min = part[hft_subset]['time'].min()
-                    part_hft = part[hft_subset & (part['time'] > time_min)]
+                    part_hft = part[hft_subset]
+
+                    # drop first second, if it is under 80% complete
+                    time_min = part_hft['time'].min()
+                    tag = high_freq_tags[0]
+                    freq = mean_spt.loc[tag]
+                    first_sec = part_hft[(part_hft['tag'] == tag) & (part_hft['time'] == time_min)]
+                    if len(first_sec) <= freq * 0.8:
+                        part_hft = part_hft[part_hft['time'] > time_min]
 
                     # get start time and min count for each tag
                     start = part_hft.groupby('tag').min()
