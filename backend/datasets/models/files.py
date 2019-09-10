@@ -1,6 +1,7 @@
 import os
 import logging
 import pandas as pd
+from jointly import Synchronizer
 from django.db import models
 from django.conf import settings
 from django.dispatch import receiver
@@ -41,6 +42,17 @@ class SignalChunkFile(OwnedModel, UUIDModel):
             LOGGER.debug('SignalChunkFile of %s (%s) Truncating data', self.signal.name, self.id)
             df = df.truncate(start, end)
         return df
+
+    def correct_timestamps(self, timeshift, stretch_factor, reference_time):
+        df = self.get_samples(self.first_timestamp, self.last_timestamp)
+        if stretch_factor != 1:
+            df = Synchronizer._stretch_signals(df, stretch_factor, reference_time)
+        if timeshift != 0:
+            df = df.shift(1, freq=timeshift)
+        self.save_to_disk(df)
+        self.first_timestamp = df.index[0]
+        self.last_timestamp = df.index[-1]
+        self.save()
 
     def save_to_disk(self, data):
         sub_path = signal_file_path(self, None)

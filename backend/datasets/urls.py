@@ -30,6 +30,8 @@ urlpatterns = [
     path('analysis_labels/<uuid:pk>/', views.AnalysisLabelDetail.as_view()),
 
     path('analysis_snapshots/', views.AnalysisSnapshotListCreate.as_view()),
+
+    path('sync/', views.Synchronization.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

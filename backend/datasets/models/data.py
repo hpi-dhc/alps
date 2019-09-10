@@ -1,12 +1,14 @@
 import logging
 import pandas as pd
 from django.db import models, connections
-from django.db.models import Q
+from django.db.models import Q, F
+from django.db.models.expressions import DurationValue
 
 from datasets.models.base import UUIDModel, OwnedModel
 from datasets.constants import signal_types, process_status
 
 LOGGER = logging.getLogger(__name__)
+
 
 class Subject(OwnedModel, UUIDModel):
     identifier = models.CharField(max_length=32)
@@ -49,6 +51,12 @@ class Dataset(OwnedModel, UUIDModel):
         null=True
     )
 
+    def correct_timestamps(self, timeshift=0, stretch_factor=1, reference_time=None):
+        for signal in self.signals.all():
+            if reference_time is None:
+                reference_time = signal.first_timestamp
+            signal.correct_timestamps(timeshift, stretch_factor, reference_time)
+
 
 class Signal(OwnedModel, UUIDModel):
     name = models.CharField(max_length=64)
@@ -75,6 +83,26 @@ class Signal(OwnedModel, UUIDModel):
     last_timestamp = models.DateTimeField()
     y_min = models.FloatField(blank=True, null=True)
     y_max = models.FloatField(blank=True, null=True)
+
+    def correct_timestamps(self, timeshift=pd.Timedelta(0, 's'), stretch_factor=1, reference_time=None):
+        if reference_time is None:
+            reference_time = self.first_timestamp
+        if self.signal_chunk_files.count() > 0:
+            for file in self.signal_chunk_files.all():
+                file.correct_timestamps(timeshift, stretch_factor, reference_time)
+            ordered_files = self.signal_chunk_files.all().order_by('first_timestamp')
+            self.first_timestamp = ordered_files.first().first_timestamp
+            self.last_timestamp = ordered_files.last().last_timestamp
+        else:
+            self.samples.all().update(
+                timestamp=(F('timestamp') - reference_time) * stretch_factor + reference_time + DurationValue(timeshift)
+            )
+            ordered_samples = self.samples.all().order_by('timestamp')
+            self.first_timestamp = ordered_samples.first().timestamp
+            self.last_timestamp = ordered_samples.last().timestamp
+        self.save()
+
+
 
     def samples_dataframe(self, start=None, end=None):
         if start is None:

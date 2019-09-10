@@ -1,8 +1,11 @@
 import logging
 import math
 import operator
+import json
 from functools import reduce
+import jointly
 import pandas as pd
+import numpy as np
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -327,8 +330,8 @@ class AnalysisListCreate(generics.ListCreateAPIView):
         dangling_results = reduce(
             operator.or_,
             [
-                Q(signal__dataset__session=a.signal.dataset.session.id)
-                and Q(label=a.label)
+                Q(signal__dataset__session=a.signal.dataset.session.id) \
+                & Q(label=a.label)
                 for a in analyses
             ]
         )
@@ -363,3 +366,79 @@ class ProcessingMethodList(generics.ListAPIView):
     queryset = models.ProcessingMethod.objects
     serializer_class = serializers.ProcessingMethodSerializer
     permission_classes = (IsAuthenticated,)
+
+
+class Synchronization(views.APIView):
+    http_method_names = ['get', 'post']
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        queryset = models.Signal.objects.filter(user=self.request.user)
+
+        signals = []
+        for signal_id in request.data.get('signals', []):
+            signals.append(get_object_or_404(queryset, id=signal_id))
+
+        if len(signals) < 2:
+            raise exceptions.ValidationError('At least two signals must be provided.')
+        if not signals:
+            raise exceptions.ValidationError('No valid signals provided.')
+
+        sources = {}
+        ref_source_name = None
+        for signal in signals:
+            data = signal.samples_dataframe()
+            source_name = signal.id
+            sources[source_name] = {
+                'data': data,
+                'ref_column': data.columns[0],
+            }
+            if str(signal.id) == request.data['reference']:
+                ref_source_name = source_name
+
+        if not ref_source_name:
+            raise exceptions.ValidationError('Reference must be provided.')
+
+        # call sync library to get params
+        configuration = request.data.get('configuration', {})
+        try:
+            extractor = jointly.ShakeExtractor()
+            extractor.window = configuration.get('window', extractor.window)
+            extractor.threshold = configuration.get('threshold', extractor.threshold)
+            extractor.min_length = configuration.get('min_length', extractor.min_length)
+            extractor.time_buffer = configuration.get('time_buffer', extractor.time_buffer)
+            synchronizer = jointly.Synchronizer(sources, ref_source_name, extractor, sampling_freq=1000)
+            params = synchronizer.get_sync_params()
+        except KeyError:
+            raise exceptions.APIException(
+                'Unable to get synchronization parameters for signals.',
+                500
+            )
+
+        # return shift and factor params
+        return Response({
+            str(key): {
+                **value,
+                'timeshift': value['timeshift'].total_seconds() if value['timeshift'] else 0
+            }
+            for key, value
+            in params.items()
+        })
+
+    def post(self, request):
+        queryset = models.Dataset.objects.filter(user=self.request.user)
+
+        reference_time = None
+        for dataset_id, params in request.data.items():
+            dataset = get_object_or_404(queryset, id=dataset_id)
+            if not reference_time:
+                reference_time = dataset.signals.first().first_timestamp
+            timeshift = params.get('timeshift', 0)
+            stretch_factor = params.get('stretch_factor', 1)
+            dataset.correct_timestamps(
+                timeshift=pd.Timedelta(timeshift, 's'),
+                stretch_factor=stretch_factor,
+                reference_time=reference_time
+            )
+
+        return Response()
