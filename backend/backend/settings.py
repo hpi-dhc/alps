@@ -25,7 +25,9 @@ SECRET_KEY = '7nzyj=794_*o%joz=0^e&0$iq0xh-nfzn4u8en_f$$)@-(3kc&'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'vm-webhrv.dhclab.i.hpi.de'
+]
 
 
 # Application definition
@@ -59,6 +61,7 @@ MIDDLEWARE = [
 
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:3000',
+    'http://vm-webhrv.dhclab.i.hpi.de:3000'
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -94,6 +97,10 @@ LOGGING = {
             'handlers': ['console'],
             'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
         },
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        }
     },
 }
 
