@@ -5,10 +5,23 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Remote Attach",
+            "name": "Python: Remote Attach Django",
             "type": "python",
             "request": "attach",
             "port": 5678,
+            "host": "localhost",
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "/app"
+                }
+            ],
+        },
+        {
+            "name": "Python: Remote Attach Celery",
+            "type": "python",
+            "request": "attach",
+            "port": 5679,
             "host": "localhost",
             "pathMappings": [
                 {

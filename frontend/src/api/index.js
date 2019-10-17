@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useEffect, useState } from 'react';
+import { keysToCamel, keysToSnake } from '../utils';
 
 const serverURL = 'http://localhost:8000/';
 
@@ -9,6 +10,7 @@ export const authEndpoint = axios.create({
     'Accept': 'application/json',
     'Content-Type': 'application/json',
   },
+  transformResponse: (data) => keysToCamel(JSON.parse(data)),
 });
 
 export const apiEndpoint = axios.create({
@@ -17,10 +19,24 @@ export const apiEndpoint = axios.create({
     'Accept': 'application/json',
     'Content-Type': 'application/json',
   },
+  transformRequest: (data, headers) => {
+    if (data instanceof FormData) {
+      return data;
+    }
+    return JSON.stringify(keysToSnake(data));
+  },
+  transformResponse: (data) => data ? keysToCamel(JSON.parse(data)) : data,
+});
+
+export const apiFileEndpoint = axios.create({
+  baseURL: serverURL + 'api/',
+  headers: {
+    'Accept': 'application/json',
+  },
 });
 
 // this array is used to set configuration parameters on all endpoints
-export const endpointArray = [authEndpoint, apiEndpoint];
+export const endpointArray = [authEndpoint, apiEndpoint, apiFileEndpoint];
 
 const CancelToken = axios.CancelToken;
 

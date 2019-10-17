@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { getProcessingMethods } from '../../selectors/data';
 import {
   makeStyles,
@@ -17,8 +17,8 @@ import ConfigIcon from '@material-ui/icons/Settings';
 import MaterialTable from 'material-table';
 import Plot from 'react-plotly.js';
 import { ANALYSIS_RESULT_STOP_POLLING, ANALYSIS_RESULT_START_POLLING } from '../../constants/ActionTypes';
-import { PROCESS_STATUS } from '../Common/StatusIcon';
 import { useJoinedResults } from './hooks';
+import { usePollingEffect } from '../Common/hooks';
 
 const useStyles = makeStyles(theme => ({
   plot: {
@@ -42,26 +42,16 @@ AnalysisResultItem.defaultProps = {
 
 export default function AnalysisResultItem ({ results, method: methodId, ...props }) {
   const classes = useStyles();
-  const dispatch = useDispatch();
   const method = useSelector(getProcessingMethods)[methodId];
   const [columns, tableData, plots, isProcessing] = useJoinedResults(results);
   const [anchorEl, setAnchorEl] = useState(null);
   const popoverOpen = Boolean(anchorEl);
+  const configuration = results.length && results[0].process
+    ? Object.entries(results[0].process.configuration)
+    : [];
 
   // start polling results, that are unprocessed or queued
-  useEffect(() => {
-    const polling = results.reduce((arr, each) => {
-      if ([PROCESS_STATUS.QUEUED, PROCESS_STATUS.PROCESSING].includes(each.status)) {
-        dispatch({ type: ANALYSIS_RESULT_START_POLLING, id: each.id });
-        return [...arr, each.id];
-      }
-      return arr;
-    }, []);
-
-    return () => {
-      polling.forEach(id => dispatch({ type: ANALYSIS_RESULT_STOP_POLLING, id }));
-    };
-  }, [dispatch, results]);
+  usePollingEffect(results, ANALYSIS_RESULT_START_POLLING, ANALYSIS_RESULT_STOP_POLLING);
 
   const handlePopoverOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -147,6 +137,7 @@ export default function AnalysisResultItem ({ results, method: methodId, ...prop
               aria-owns={popoverOpen ? 'config-popover' : undefined}
               aria-haspopup='true'
               size='small'
+              disabled={!configuration}
               onClick={handlePopoverOpen}
             >
               <ConfigIcon />
@@ -159,7 +150,7 @@ export default function AnalysisResultItem ({ results, method: methodId, ...prop
           {plots.map(renderPlot)}
         </Grid>
       </CardContent>
-      {/* <Popover
+      <Popover
         id='config-popover'
         classes={{
           paper: classes.popover,
@@ -177,8 +168,8 @@ export default function AnalysisResultItem ({ results, method: methodId, ...prop
         onClose={handlePopoverClose}
         disableRestoreFocus
       >
-        {Object.entries(results[0].configuration).map(([key, value]) => <Typography>{key}: {String(value)}</Typography>)}
-      </Popover> */}
+        {configuration.map(([key, value]) => <Typography>{key}: {String(value)}</Typography>)}
+      </Popover>
     </Card>
   );
 }

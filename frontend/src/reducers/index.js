@@ -5,6 +5,7 @@ import authentication from './authentication';
 import data from './data';
 import preprocess from './plots';
 import analysis from './analysis';
+import sync from './sync';
 
 const rootReducer = combineReducers({
   app,
@@ -12,6 +13,7 @@ const rootReducer = combineReducers({
   data,
   preprocess,
   analysis,
+  sync,
 });
 
 const initialState = rootReducer({}, {});

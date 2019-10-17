@@ -11,7 +11,69 @@ export function filterObjectByValue (object, predicate) {
     }
     return filtered;
   }, {});
-}
+};
+
+export const isUUID = (string = '') => {
+  return string.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i) !== null;
+};
+
+export const isObject = function (o) {
+  return o === Object(o) && !Array.isArray(o) && typeof o !== 'function';
+};
+
+export const toCamel = (s) => {
+  if (isUUID(s)) {
+    return s;
+  }
+
+  return s.replace(/([-_][A-Za-z])/g, ($1) => {
+    return $1.toUpperCase()
+      .replace('-', '')
+      .replace('_', '');
+  });
+};
+
+export const toSnake = (s) => {
+  return s.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase();
+};
+
+export const keysToCamel = (o) => {
+  if (isObject(o)) {
+    const n = {};
+
+    Object.keys(o)
+      .forEach((k) => {
+        n[toCamel(k)] = keysToCamel(o[k]);
+      });
+
+    return n;
+  } else if (Array.isArray(o)) {
+    return o.map((i) => {
+      return keysToCamel(i);
+    });
+  }
+
+  return o;
+};
+
+export const keysToSnake = (o) => {
+  if (isObject(o)) {
+    const n = {};
+
+    Object.keys(o)
+      .forEach((k) => {
+        n[toSnake(k)] = keysToSnake(o[k]);
+      });
+
+    return n;
+  } else if (Array.isArray(o)) {
+    return o.map((i) => {
+      return keysToSnake(i);
+    });
+  }
+
+  return o;
+};
 
 export function useEventListener (eventName, handler, element = window) {
   // Create a ref that stores handler
@@ -45,4 +107,17 @@ export function useEventListener (eventName, handler, element = window) {
     },
     [eventName, element] // Re-run if eventName or element changes
   );
+};
+
+export const usePrevious = (value) => {
+  const ref = useRef();
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref.current;
+};
+
+export const useCompare = (value) => {
+  const prevValue = usePrevious(value);
+  return prevValue !== value;
 };

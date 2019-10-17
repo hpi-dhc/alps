@@ -2,16 +2,33 @@ import { useEffect } from 'react';
 import { addSeconds, subSeconds, isValid } from 'date-fns';
 import { apiEndpoint, useDataApi } from '.';
 
-export const requestSignal = (id) => {
+export const get = (id) => {
   return apiEndpoint.get(`signals/${id}/`);
 };
 
-export const requestSamples = (id, from, to) => {
-  let url = `signals/${id}/samples/`;
-  if (from && from.isValid() && to && to.isValid()) {
-    url += `${from.format()}/${to.format()}/`;
-  }
-  return apiEndpoint.get(url);
+export const requestSamples = (id, domain, maxSamples = 2000, normalize = false, stretchFactor, timeshift, referenceTime) => {
+  const url = `signals/${id}/samples/`;
+  const start = domain[0] ? subSeconds(new Date(Number(domain[0])), 1) : undefined;
+  const end = domain[1] ? addSeconds(new Date(Number(domain[1])), 1) : undefined;
+  return apiEndpoint.get(url, {
+    params: {
+      start: isValid(start) ? start : null,
+      end: isValid(end) ? end : null,
+      max_samples: maxSamples,
+      normalize,
+      stretch_factor: stretchFactor,
+      timeshift,
+      reference_time: referenceTime,
+    },
+  });
+};
+
+export const filter = (id, filter, configuration) => {
+  return apiEndpoint.post('filter/', {
+    signal: id,
+    filter,
+    configuration,
+  });
 };
 
 export const useSignal = (id) => {

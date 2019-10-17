@@ -1,6 +1,7 @@
 import {
   SUBJECT_LIST_SUCCESS,
   SESSION_GET_SUCCESS,
+  SESSION_LIST_SUCCESS,
   DATASET_GET_SUCCESS,
   SUBJECT_CREATE_SUCCESS,
   SESSION_CREATE_SUCCESS,
@@ -20,6 +21,8 @@ import {
   ANALYSIS_RESULT_CREATE_SUCCESS,
   ANALYSIS_RESULT_GET_SUCCESS,
   ANALYSIS_SNAPSHOT_LIST_SUCCESS,
+  SIGNAL_GET_SUCCESS,
+  SIGNAL_FILTER_SUCCESS,
 } from '../constants/ActionTypes';
 import { filterObjectByValue } from '../utils';
 
@@ -146,6 +149,11 @@ const data = (state = initialState, action) => {
         datasets,
       };
     }
+    case SESSION_LIST_SUCCESS:
+      return {
+        ...newState,
+        sessions: action.payload.entities.sessions,
+      };
     case SESSION_GET_SUCCESS:
       return {
         ...newState,
@@ -214,6 +222,52 @@ const data = (state = initialState, action) => {
           ...newState.sessions,
         },
         datasets,
+      };
+    }
+    case SIGNAL_GET_SUCCESS: {
+      const signal = action.payload.entities.signals[action.payload.result];
+      const dataset = newState.datasets[signal.dataset];
+      if (!dataset.signals.includes(signal.id)) {
+        dataset.signals.push(signal.id);
+      }
+      return {
+        ...newState,
+        datasets: {
+          ...newState.datasets,
+          [dataset.id]: { ...dataset },
+        },
+        signals: {
+          ...newState.signals,
+          [signal.id]: signal,
+        },
+      };
+    }
+    case SIGNAL_FILTER_SUCCESS: {
+      const signal = action.payload.entities.signals[action.payload.result];
+      const dataset = newState.datasets[signal.dataset];
+      if (!dataset.signals.includes(signal.id)) {
+        dataset.signals.push(signal.id);
+      }
+
+      const signalToDelete = Object.values(newState.signals).find(one => one.rawSignal === signal.rawSignal);
+      console.log('signalToDelete', signalToDelete);
+      if (signalToDelete) {
+        delete newState.signals[signalToDelete.id];
+        dataset.signals = dataset.signals.filter(each => each !== signalToDelete.id);
+        console.log('Is signal still in newState?', newState.signals.hasOwnProperty(signalToDelete.id));
+        console.log('Is signal still in dataset?', dataset.signals.includes(signalToDelete.id));
+      }
+
+      return {
+        ...newState,
+        datasets: {
+          ...newState.datasets,
+          [dataset.id]: { ...dataset },
+        },
+        signals: {
+          ...newState.signals,
+          [signal.id]: signal,
+        },
       };
     }
     case ANALYSIS_SAMPLE_CREATE_SUCCESS: {

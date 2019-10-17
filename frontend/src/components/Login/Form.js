@@ -44,8 +44,8 @@ class LoginForm extends Component {
     if (!errorMessage) {
       return '';
     }
-    if (errorMessage.hasOwnProperty('non_field_errors')) {
-      return errorMessage.non_field_errors[0];
+    if (errorMessage.hasOwnProperty('nonFieldErrors')) {
+      return errorMessage.nonFieldErrors[0];
     }
     return 'Something went wrong.';
   }

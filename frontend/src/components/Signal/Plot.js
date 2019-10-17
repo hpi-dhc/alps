@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useCallbackRef } from 'use-callback-ref';
 import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -30,8 +30,10 @@ SignalPlot.propTypes = {
   yLabel: PropTypes.string,
   showDots: PropTypes.bool,
   hideRange: PropTypes.bool,
+  disableTooltip: PropTypes.bool,
   onAreaMarked: PropTypes.func,
   onPanEnd: PropTypes.func,
+  onClick: PropTypes.func,
 };
 
 SignalPlot.defaultProps = {
@@ -41,6 +43,7 @@ SignalPlot.defaultProps = {
   mode: plotModes.PAN_MODE,
   showDots: false,
   hideRange: false,
+  disableTooltip: false,
   domainX: [null, null],
   domainY: ['auto', 'auto'],
 };
@@ -52,11 +55,13 @@ export default function SignalPlot ({
   mode,
   showDots,
   hideRange,
+  disableTooltip,
   domainX: domainXProp,
   domainY,
   yLabel,
   onAreaMarked,
   onPanEnd,
+  onClick,
   ...rest
 }) {
   const labels = useSelector(getAnalysisLabels);
@@ -69,6 +74,17 @@ export default function SignalPlot ({
     const seconds = domainXProp[1] - domainXProp[0];
     setResolution(seconds / ref.container.clientWidth);
   });
+  const signalIds = useMemo(() => {
+    if (!data || !data.length) return [];
+    const keys = Object.keys(data[0]);
+    return keys.reduce((ids, key) => {
+      const match = key.match(/(?:mean|range|y)-(\S+)/);
+      if (match && !ids.includes(match[1])) {
+        ids.push(match[1]);
+      }
+      return ids;
+    }, []);
+  }, [data]);
 
   useEffect(() => {
     setDomainX(domainXProp);
@@ -115,7 +131,7 @@ export default function SignalPlot ({
     }
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (event) => {
     if (mode === plotModes.PAN_MODE && panStart) {
       if (onPanEnd) onPanEnd({ domainX });
       setPanStart();
@@ -131,6 +147,8 @@ export default function SignalPlot ({
 
       if (onAreaMarked) onAreaMarked(markedArea);
       setMarkedArea(['', '']);
+    } else if (event.activeLabel) {
+      if (onClick) onClick(event.activeLabel);
     }
   };
 
@@ -188,6 +206,67 @@ export default function SignalPlot ({
     );
   };
 
+  const renderSignal = (id) => {
+    let color;
+    let rangeKey = 'range';
+    let meanKey = 'mean';
+    let yKey = 'y';
+
+    if (id) {
+      color = generateColor(id);
+      rangeKey += '-' + id;
+      meanKey += '-' + id;
+      yKey += '-' + id;
+    }
+
+    const range = (
+      <Area
+        key={rangeKey}
+        hide={hideRange}
+        dataKey={rangeKey}
+        type='monotoneX'
+        dot={false}
+        fillOpacity={0.3}
+        strokeOpacity={0.5}
+        isAnimationActive={false}
+        fill={color}
+        stroke={color}
+      />
+    );
+
+    const mean = (
+      <Line
+        key={meanKey}
+        dataKey={meanKey}
+        type='monotoneX'
+        dot={showDots}
+        isAnimationActive={false}
+        stroke={color}
+      />
+    );
+
+    const y = (
+      <Line
+        key={yKey}
+        dataKey={yKey}
+        type='monotoneX'
+        dot={showDots}
+        isAnimationActive={false}
+        stroke={color}
+      />
+    );
+
+    return [range, mean, y];
+  };
+
+  const renderSignals = () => {
+    if (signalIds && signalIds.length > 0) {
+      return signalIds.map(renderSignal);
+    }
+
+    return renderSignal();
+  };
+
   return (
     <ResponsiveContainer width='99.9%' height={200}>
       <ComposedChart
@@ -216,34 +295,14 @@ export default function SignalPlot ({
           <Label position='insideLeft' angle={270} style={{ textAnchor: 'middle' }}>{yLabel}</Label>
         </YAxis>
         {
-          !panStart &&
+          !disableTooltip && !panStart &&
           <Tooltip
             label
             labelFormatter={tooltipLabelFormatter}
           />
         }
         { analysisSamples.map(renderAnalysisSample) }
-        <Area
-          hide={hideRange}
-          dataKey='range'
-          type='monotoneX'
-          dot={false}
-          fillOpacity={0.3}
-          strokeOpacity={0.5}
-          isAnimationActive={false}
-        />
-        <Line
-          dataKey='mean'
-          type='monotoneX'
-          dot={showDots}
-          isAnimationActive={false}
-        />
-        <Line
-          dataKey='y'
-          type='monotoneX'
-          dot={showDots}
-          isAnimationActive={false}
-        />
+        { renderSignals() }
         { tags.map(renderTag) }
         { renderMarkedArea() }
       </ComposedChart>

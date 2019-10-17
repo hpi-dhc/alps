@@ -27,7 +27,6 @@ services:
       - '5678:5678'
     volumes:
       - ./backend:/app
-      - ./uploads:/uploads
     depends_on:
       - db
 
@@ -40,11 +39,12 @@ services:
 
   worker:
     image: *backend
-    command: celery --app=backend worker --hostname=worker@%h --autoscale=4,2 --loglevel=INFO
+    command: celery --app=backend worker --hostname=worker@%h -P solo --loglevel=INFO
     restart: unless-stopped
+    ports:
+      - '5679:5678'
     volumes:
       - ./backend:/app
-      - ./uploads:/uploads
     depends_on:
       - db
       - redis

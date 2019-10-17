@@ -13,6 +13,7 @@
     "axios": "0.19.0",
     "dataframe-js": "^1.4.3",
     "date-fns": "2.0.0-alpha.27",
+    "js-file-download": "^0.4.8",
     "material-table": "1.48.0",
     "normalizr": "3.4.0",
     "plotly.js": "^1.48.3",

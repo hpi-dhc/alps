@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
 import uuid from 'uuid/v4';
 
-import { Container, Fab, Grid, Box } from '@material-ui/core';
+import { Container, Fab, Grid, makeStyles } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import SignalCard from '../components/Signal/Card';
 import { filterObjectByValue } from '../utils';
@@ -17,7 +17,16 @@ import * as plotModes from '../constants/PlotModes';
 import AnalysisSampleDialog from '../components/AnalysisSample/Dialog';
 import { usePlots } from '../components/Signal/hooks';
 
+const useStyles = makeStyles(theme => ({
+  buttonItem: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+}));
+
 function SessionPreprocess ({ match }) {
+  const styles = useStyles();
   const sessionId = match.params.sessionId;
   const session = useSelector(getSessions)[sessionId];
   const { plots, datasets, signals } = usePlots(sessionId);
@@ -122,21 +131,20 @@ function SessionPreprocess ({ match }) {
       <Grid
         container
         direction='column'
+        alignItems='stretch'
         spacing={2}
       >
         {renderMainSignalCard()}
         {renderSignalCards()}
-        <Grid item>
-          <Box display='flex' justifyContent='center'>
-            <Fab
-              color='secondary'
-              onClick={handleCreatePlot}
-              disabled={!session.datasets.length}
-              title='Add plot'
-            >
-              <AddIcon />
-            </Fab>
-          </Box>
+        <Grid item className={styles.buttonItem}>
+          <Fab
+            color='secondary'
+            onClick={handleCreatePlot}
+            disabled={!session.datasets.length}
+            title='Add plot'
+          >
+            <AddIcon />
+          </Fab>
         </Grid>
       </Grid>
       <AnalysisSampleDialog

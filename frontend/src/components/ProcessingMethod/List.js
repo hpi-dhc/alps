@@ -1,38 +1,38 @@
-import React, { useCallback } from 'react';
-// import PropTypes from 'prop-types';
-import { useSelector, useDispatch } from 'react-redux';
+import React from 'react';
+import PropTypes from 'prop-types';
+import { useSelector } from 'react-redux';
 import { getInstalledProcessingMethods } from '../../selectors/data';
 import { List } from '@material-ui/core';
 import CollapsableItem from '../Common/CollapsableItem';
 import OptionsGroup from './Options';
-import { getSelectedMethods, getMethodConfigurations } from '../../selectors/analysis';
-import * as Analysis from '../../actions/analysis';
+import { filterObjectByValue } from '../../utils';
 
-export default function ProcessingMethodList () {
-  const dispatch = useDispatch();
-  const methods = useSelector(getInstalledProcessingMethods);
-  const selectedMethods = useSelector(getSelectedMethods);
-  const methodConfigurations = useSelector(getMethodConfigurations);
+ProcessingMethodList.propTypes = {
+  types: PropTypes.arrayOf(PropTypes.string),
+  selected: PropTypes.array,
+  configurations: PropTypes.object,
+  onSelect: PropTypes.func.isRequired,
+  onChange: PropTypes.func.isRequired,
+};
 
-  const handleChange = useCallback((method, key, value) => {
-    dispatch(Analysis.setConfigParameter(method, key, value));
-  }, [dispatch]);
+ProcessingMethodList.defaultProps = {
+  selected: [],
+  configurations: {},
+};
 
-  const handleMethodSelect = useCallback((method, checked) => {
-    if (checked) {
-      dispatch(Analysis.addMethod(method));
-    } else {
-      dispatch(Analysis.removeMethod(method));
-    }
-  }, [dispatch]);
+export default function ProcessingMethodList ({ types, selected, configurations, onSelect, onChange }) {
+  let methods = useSelector(getInstalledProcessingMethods);
+  if (types) {
+    methods = filterObjectByValue(methods, (each) => types.includes(each.type));
+  }
 
   const renderItem = (item) => {
-    const checked = selectedMethods.includes(item.id);
-    const configuration = methodConfigurations[item.id];
+    const checked = selected.includes(item.id);
+    const configuration = configurations[item.id];
     return (
       <CollapsableItem
         checked={checked}
-        onChange={(checked) => handleMethodSelect(item.id, checked)}
+        onChange={(checked) => onSelect(item.id, checked)}
         key={item.id}
         title={item.name}
         disableGutters
@@ -40,7 +40,7 @@ export default function ProcessingMethodList () {
         { Object.keys(item.options).length > 0 &&
           <OptionsGroup
             item={item.options}
-            onChange={(key, value) => handleChange(item.id, key, value)}
+            onChange={(key, value) => onChange(item.id, key, value)}
             values={configuration}
           />
         }

@@ -3,14 +3,13 @@ import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
 
 import SignalCard from '../components/Signal/Card';
-import { getIBISignals, getDatasets } from '../selectors/data';
+import { getIBISignals } from '../selectors/data';
 import { getMode } from '../selectors/plots';
 import * as Plots from '../actions/plots';
 import { Container } from '@material-ui/core';
 import AnalysisResultList from '../components/Analysis/ResultList';
 import * as Sessions from '../actions/sessions';
 import * as Analysis from '../actions/analysis';
-import { filterObjectByValue } from '../utils';
 import { PAN_MODE, LABEL_MODE } from '../constants/PlotModes';
 import { usePlots } from '../components/Signal/hooks';
 
@@ -22,9 +21,8 @@ export default function SessionAnalysis ({ match }) {
   const dispatch = useDispatch();
 
   const sessionId = match.params.sessionId;
-  const { plots } = usePlots(sessionId);
+  const { plots, datasets } = usePlots(sessionId);
   const plotMode = useSelector(getMode);
-  const datasets = filterObjectByValue(useSelector(getDatasets), each => each.session === sessionId);
   const signals = useSelector(getIBISignals);
 
   useEffect(() => {

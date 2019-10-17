@@ -11,7 +11,6 @@ import {
   ListItemIcon,
 } from '@material-ui/core';
 import ArrowDownIcon from '@material-ui/icons/ArrowDropDown';
-import { tsObjectKeyword } from '@babel/types';
 
 const useStyles = makeStyles(theme => ({
   item: {

@@ -1,5 +1,6 @@
-import { all, put, call, select, throttle } from 'redux-saga/effects';
+import { all, put, call, select, throttle, takeEvery } from 'redux-saga/effects';
 import { normalize } from 'normalizr';
+import FileDownload from 'js-file-download';
 import * as ActionTypes from '../constants/ActionTypes';
 import * as Schemas from '../schemas';
 import * as Api from '../api/analysis';
@@ -30,8 +31,14 @@ function * handleRunAnalysis (action) {
   }
 }
 
+function * handleExportRequest (action) {
+  const response = yield call(Api.exportResults, action.payload.sessions, action.payload.labels);
+  FileDownload(response.data, 'results.csv');
+}
+
 export default function * analysisSaga () {
   yield all([
     throttle(2500, ActionTypes.ANALYSIS_RUN, handleRunAnalysis),
+    takeEvery(ActionTypes.ANALYSIS_RESULT_EXPORT_REQUEST, handleExportRequest),
   ]);
 }

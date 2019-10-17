@@ -23,6 +23,7 @@ LinkTab.propTypes = {
 const SessionToolbar = ({ match, location }) => {
   const session = useSelector(getSessions)[match.params.sessionId];
   const sessionAvailable = Boolean(session);
+  const showSync = !sessionAvailable || session.datasets.length >= 2;
   const getUrl = (to) => {
     const url = `/sessions/${match.params.sessionId}`;
     return to ? `${url}/${to}` : url;
@@ -36,11 +37,13 @@ const SessionToolbar = ({ match, location }) => {
           label='Details'
           value={getUrl()}
         />
-        <LinkTab
-          label='Synchronization'
-          value={getUrl('sync')}
-          disabled={!sessionAvailable || session.datasets.length < 2}
-        />
+        { showSync &&
+          <LinkTab
+            label='Synchronization'
+            value={getUrl('sync')}
+            hidden={!sessionAvailable}
+          />
+        }
         <LinkTab
           label='Preprocessing'
           value={getUrl('preprocess')}

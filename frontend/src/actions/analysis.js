@@ -7,6 +7,7 @@ import {
   ANALYSIS_SIGNAL_ADD,
   ANALYSIS_SIGNAL_REMOVE,
   ANALYSIS_RESET,
+  ANALYSIS_RESULT_EXPORT_REQUEST,
 } from '../constants/ActionTypes';
 
 export const run = (signal, label, methods, config) => ({
@@ -51,4 +52,12 @@ export const reset = () => ({
 export const list = (session) => ({
   type: ANALYSIS_RESULT_LIST_REQUEST,
   session,
+});
+
+export const exportResults = (sessions, labels) => ({
+  type: ANALYSIS_RESULT_EXPORT_REQUEST,
+  payload: {
+    sessions,
+    labels,
+  },
 });

@@ -15,14 +15,18 @@ import {
 } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import ErrorIcon from '@material-ui/icons/Error';
+import InfoIcon from '@material-ui/icons/Info';
 import ZoomOutIcon from '@material-ui/icons/ZoomOutMap';
 import YAxisToggleIcon from '@material-ui/icons/UnfoldMore';
 import DotsToggleIcon from '@material-ui/icons/FiberManualRecord';
 
 import SignalPlot from './Plot';
 import { useSignalSamples } from '../../api/signals';
+import { usePollingEffect } from '../Common/hooks';
 import * as Plots from '../../actions/plots';
 import { getSources, getAnalysisSamplesArrayBySession } from '../../selectors/data';
+import { SIGNAL_STOP_POLLING, SIGNAL_START_POLLING } from '../../constants/ActionTypes';
+import { useCompare } from '../../utils';
 
 const useStyles = makeStyles(theme => ({
   actionArea: {
@@ -63,7 +67,7 @@ function SignalCard ({ datasets, signals, plot, tagSignal, closable, plotProps, 
   const sources = useSelector(getSources);
   const signal = signals[plot.signal];
   const analysisSamples = useSelector(state => getAnalysisSamplesArrayBySession(state)[plot.session]);
-  const domainY = signal ? [signal.y_min, signal.y_max] : undefined;
+  const domainY = signal ? [signal.yMin, signal.yMax] : undefined;
   const [ isDomainYAuto, setDomainYAuto ] = useState(true);
   const [ showDots, setShowDots ] = useState(false);
 
@@ -88,8 +92,16 @@ function SignalCard ({ datasets, signals, plot, tagSignal, closable, plotProps, 
     }
   }, [dispatch, filteredSignals, plot.id, plot.session, plot.signal]);
 
-  const { data: samples, isError, isLoading } = useSignalSamples(plot.signal, plotProps.domainX);
+  const { isPolling } = usePollingEffect(signal, SIGNAL_START_POLLING, SIGNAL_STOP_POLLING);
+  const isPollingChanged = useCompare(isPolling);
+  const { data: samples, isError, isLoading, reload } = useSignalSamples(plot.signal, plotProps.domainX);
   const { data: { data: tags } } = useSignalSamples(tagSignal, plotProps.domainX);
+
+  useEffect(() => {
+    if (isPollingChanged && !isPolling && !isLoading) {
+      reload();
+    }
+  }, [isLoading, isPolling, isPollingChanged, reload]);
 
   const getSourceName = (dataset) => {
     const source = sources[dataset.source];
@@ -115,14 +127,10 @@ function SignalCard ({ datasets, signals, plot, tagSignal, closable, plotProps, 
     }));
   }, [dispatch, plot]);
 
-  // const handleZoomIn = useCallback(([start, end]) => {
-  //   dispatch(Plots.setDomain(plot.session, [Number(start), Number(end)]));
-  // }, [dispatch, plot]);
-
   const handleZoomOut = useCallback(() => {
     const domainX = [
-      new Date(signal.first_timestamp).valueOf(),
-      new Date(signal.last_timestamp).valueOf(),
+      new Date(signal.firstTimestamp).valueOf(),
+      new Date(signal.lastTimestamp).valueOf(),
     ];
     dispatch(Plots.setDomain(plot.session, domainX));
   }, [dispatch, plot, signal]);
@@ -176,10 +184,14 @@ function SignalCard ({ datasets, signals, plot, tagSignal, closable, plotProps, 
 
   return (
     <Card {...rest} style={{ userSelect: 'none' }}>
-      { isLoading && <LinearProgress className={classes.progressBar} /> }
+      { (isLoading || isPolling) && <LinearProgress className={classes.progressBar} /> }
       <CardActions className={classes.actionArea}>
         { renderDatasetSelection() }
         { renderSignalSelection() }
+        {
+          signal && signal.process && signal.process.info &&
+          <Tooltip title={signal.process.info}><InfoIcon color='inherit' /></Tooltip>
+        }
         { isError && <Tooltip title='Unable to load signal.'><ErrorIcon color='error' /></Tooltip> }
         { samples.downsampled &&
           <Typography

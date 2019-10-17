@@ -82,8 +82,8 @@ function DatasetTable ({ datasets, onAdd, onDelete }) {
         },
         {
           title: 'Created at',
-          field: 'created_at',
-          render: rowData => formatDate(new Date(rowData.created_at), 'MMMM dd, yyyy HH:mm'),
+          field: 'createdAt',
+          render: rowData => formatDate(new Date(rowData.createdAt), 'MMMM dd, yyyy HH:mm'),
         },
         {
           title: 'Status',

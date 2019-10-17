@@ -100,22 +100,22 @@
         },
         "fastparquet": {
             "git": "https://github.com/dask/fastparquet.git",
-            "ref": "e783eca9499883a6f025f18cce709c226e21402f"
+            "ref": "8767c2f94975aed8d052a9d0ad6f5e4e630a6f12"
         },
         "importlib-metadata": {
             "hashes": [
-                "sha256:0c505102757e7fa28b9f0958d8bc81301159dea16e2649858c92edc158b78a83",
-                "sha256:9a9f75ce32e78170905888acbf2376a81d3f21ecb3bb4867050413411d3ca7a9"
+                "sha256:aa18d7378b00b40847790e7c27e11673d7fed219354109d0e7b9e5b25dc3ad26",
+                "sha256:d5f18a79777f3aa179c145737780282e27b508fc8fd688cb17c7a813e8bd39af"
             ],
-            "version": "==0.21"
+            "version": "==0.23"
         },
         "jointly": {
             "hashes": [
-                "sha256:2746c3af63526562577642bc0e887049c60384f5336b05e3fd0cbcfed4a1537f",
-                "sha256:5b1fba6abc926655144750395ad33fcb63e3d2046fa23b96637a0bd3a47aaf94"
+                "sha256:4eb57840c873b63d624560a7c1c2574e66c7bb76fafcd7cd1c7f61a0fd3796d1",
+                "sha256:eb62f7684746f8547728fefe6f3121a7c97439306a6901e70f57ed693cb1e5be"
             ],
             "index": "pypi",
-            "version": "==0.1.3"
+            "version": "==0.1.5"
         },
         "kiwisolver": {
             "hashes": [
@@ -356,10 +356,10 @@
     "develop": {
         "astroid": {
             "hashes": [
-                "sha256:6560e1e1749f68c64a4b5dee4e091fce798d2f0d84ebe638cf0e0585a343acf4",
-                "sha256:b65db1bbaac9f9f4d190199bb8680af6f6f84fd3769a5ea883df8a91fe68b4c4"
+                "sha256:9b3f17b0550f82e28a6776a4e5222441f48e523b0773df4bc505bb6b7c2093b7",
+                "sha256:c7e2e5773d87ccc00d01c273e439386f4d6d63cce61317a79ccce5880162f9fb"
             ],
-            "version": "==2.2.5"
+            "version": "==2.3.0"
         },
         "isort": {
             "hashes": [
@@ -431,11 +431,11 @@
         },
         "pylint": {
             "hashes": [
-                "sha256:5d77031694a5fb97ea95e828c8d10fc770a1df6eb3906067aaed42201a8a6a09",
-                "sha256:723e3db49555abaf9bf79dc474c6b9e2935ad82230b10c1138a71ea41ac0fff1"
+                "sha256:92280a6085fc5e4fec67d6330c0c85eae50817696d02bdc85e9ca6bab830ad58",
+                "sha256:ef796b99c243afeebf7a04b4426126ac837940da6bcd5fc47229c507e056fec1"
             ],
             "index": "pypi",
-            "version": "==2.3.1"
+            "version": "==2.4.0"
         },
         "pylint-django": {
             "hashes": [
@@ -476,7 +476,7 @@
                 "sha256:d896919306dd0aa22d0132f62a1b78d11aaf4c9fc5b3410d3c666b818191630a",
                 "sha256:ffde2fbfad571af120fcbfbbc61c72469e72f550d676c3342492a9dfdefb8f12"
             ],
-            "markers": "implementation_name == 'cpython'",
+            "markers": "implementation_name == 'cpython' and python_version >= '3.7' and python_version < '3.8'",
             "version": "==1.4.0"
         },
         "wrapt": {

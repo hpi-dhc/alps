@@ -1,22 +1,23 @@
 import {
-  SAMPLES_FAILURE,
-  SAMPLES_GET_REQUEST,
-  SAMPLES_GET_SUCCESS
-} from '../constants/ActionTypes'
+  SIGNAL_FILTER_REQUEST, SIGNAL_STOP_POLLING, SIGNAL_START_POLLING,
+} from '../constants/ActionTypes';
 
-export const requestSamples = (id, from, to) => ({
-  type: SAMPLES_GET_REQUEST,
+export const filter = (session, signal, filter, configuration = {}) => ({
+  type: SIGNAL_FILTER_REQUEST,
+  payload: {
+    session,
+    signal,
+    filter,
+    configuration,
+  },
+});
+
+export const startPolling = (id) => ({
+  type: SIGNAL_START_POLLING,
   id,
-  from,
-  to
-})
+});
 
-export const receiveSamples = (payload) => ({
-  type: SAMPLES_GET_SUCCESS,
-  payload
-})
-
-export const samplesError = (error) => ({
-  type: SAMPLES_FAILURE,
-  error
-})
+export const stopPolling = (id) => ({
+  type: SIGNAL_STOP_POLLING,
+  id,
+});

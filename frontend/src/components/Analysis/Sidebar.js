@@ -7,16 +7,20 @@ import {
   makeStyles,
   Divider,
   Typography,
-  Box,
   Button,
 } from '@material-ui/core';
 import PlotMode from '../Signal/PlotMode';
 import ProcessingMethodList from '../ProcessingMethod/List';
 import LabelSelect from './LabelSelect';
 import { ANALYSIS_RUN } from '../../constants/ActionTypes';
-import { canRunAnalysis } from '../../selectors/analysis';
+import {
+  canRunAnalysis,
+  getSelectedMethods,
+  getMethodConfigurations,
+  getSelectedLabel,
+} from '../../selectors/analysis';
+import * as Analysis from '../../actions/analysis';
 import SignalSelect from './SignalSelect';
-import SnapshotSelect from './SnapshotSelect';
 
 const useStyles = makeStyles(theme => ({
   divider: {
@@ -41,13 +45,34 @@ function AnalysisSidebar ({ match }) {
   const classes = useStyles();
   const sessionId = match.params.sessionId;
   const plots = useSelector(getItems)[sessionId];
+  const selectedMethods = useSelector(getSelectedMethods);
+  const selectedLabel = useSelector(getSelectedLabel);
+  const methodConfigurations = useSelector(getMethodConfigurations);
   const runDisabled = !useSelector(canRunAnalysis);
+  const exportDisabled = !selectedLabel || !sessionId;
 
   const dispatch = useDispatch();
+
+  const handleConfigChange = useCallback((method, key, value) => {
+    dispatch(Analysis.setConfigParameter(method, key, value));
+  }, [dispatch]);
+
+  const handleMethodSelect = useCallback((method, checked) => {
+    if (checked) {
+      dispatch(Analysis.addMethod(method));
+    } else {
+      dispatch(Analysis.removeMethod(method));
+    }
+  }, [dispatch]);
+
   const handleRunAnalysis = useCallback(() => {
     const signal = plots.plots[plots.mainPlot].signal;
     dispatch({ type: ANALYSIS_RUN, signal });
   }, [dispatch, plots]);
+
+  const handleExport = useCallback(() => {
+    dispatch(Analysis.exportResults([sessionId], [selectedLabel]));
+  }, [dispatch, selectedLabel, sessionId]);
 
   if (!plots) {
     return <div />;
@@ -58,14 +83,20 @@ function AnalysisSidebar ({ match }) {
       <Container>
         <PlotMode hideLabel />
         <Divider className={classes.divider} />
-        <SnapshotSelect session={sessionId} />
+        <Button variant='outlined' onClick={handleExport} disabled={exportDisabled}>Export Analysis</Button>
         <Divider className={classes.divider} />
         <LabelSelect session={sessionId} inputLabel='Label' />
         <Divider className={classes.divider} />
         <SignalSelect session={sessionId} />
         <Divider className={classes.divider} />
         <Typography variant='caption' color='textSecondary' gutterBottom>Methods</Typography>
-        <ProcessingMethodList />
+        <ProcessingMethodList
+          types={['AN']}
+          configurations={methodConfigurations}
+          selected={selectedMethods}
+          onSelect={handleMethodSelect}
+          onChange={handleConfigChange}
+        />
       </Container>
       <Button
         className={classes.runButton}

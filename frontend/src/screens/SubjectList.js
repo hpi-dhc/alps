@@ -7,6 +7,7 @@ import { Container } from '@material-ui/core';
 import { getSubjectsArray } from '../selectors/data';
 import * as Subjects from '../actions/subjects';
 import Alert from '../components/Common/Alert';
+import ExportAnalysisResultsDialog from '../components/Export/AnalysisResultsDialog';
 
 SubjectsScreen.propTypes = {
   history: PropTypes.object.isRequired,
@@ -54,6 +55,7 @@ function SubjectsScreen ({ history }) {
 
   return (
     <Container>
+      <ExportAnalysisResultsDialog />
       <SubjectTable
         subjects={subjects}
         onAdd={handleNewSubject}

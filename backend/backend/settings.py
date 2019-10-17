@@ -26,6 +26,7 @@ SECRET_KEY = '7nzyj=794_*o%joz=0^e&0$iq0xh-nfzn4u8en_f$$)@-(3kc&'
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    'localhost',
     'vm-webhrv.dhclab.i.hpi.de'
 ]
 
@@ -99,7 +100,7 @@ LOGGING = {
         },
         'django.db.backends': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            'level': 'WARNING',
         }
     },
 }

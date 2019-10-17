@@ -7,7 +7,7 @@ import { PROCESS_STATUS } from '../Common/StatusIcon';
 export const useJoinedResults = (results) => {
   const datasets = useSelector(getDatasets);
   const signals = useSelector(getAllSignals);
-  const isProcessing = results.some(each => [PROCESS_STATUS.QUEUED, PROCESS_STATUS.PROCESSING].includes(each.status));
+  const isProcessing = results.some(each => !each.process || [PROCESS_STATUS.QUEUED, PROCESS_STATUS.PROCESSING].includes(each.process.status));
   const isError = results.some(each => each.status === PROCESS_STATUS.ERROR);
   const doNotProcess = !results.length || isProcessing || isError;
 
@@ -18,21 +18,22 @@ export const useJoinedResults = (results) => {
   const [columns, tableData] = useMemo(() => {
     if (doNotProcess) return [[], []];
 
-    let [dataframe, ...rest] = results.map(({ signal, result }) => {
-      const suffix = getSuffix(signal);
-      let dataframe = new DataFrame(result.table.data, result.table.columns);
+    let [dataframe, ...rest] = results.filter(each => each.result && each.result.table)
+      .map(({ signal, result }) => {
+        const suffix = getSuffix(signal);
+        let dataframe = new DataFrame(result.table.data, result.table.columns);
 
-      if (results.length > 1) {
-        dataframe = dataframe.renameAll(dataframe.listColumns().map((each) => {
-          if (!['Variable', 'Unit'].includes(each)) {
-            return `${each} (${suffix})`;
-          }
-          return each;
-        }));
-      }
+        if (results.length > 1) {
+          dataframe = dataframe.renameAll(dataframe.listColumns().map((each) => {
+            if (!['Variable', 'Unit'].includes(each)) {
+              return `${each} (${suffix})`;
+            }
+            return each;
+          }));
+        }
 
-      return dataframe;
-    });
+        return dataframe;
+      });
 
     for (let each of rest) {
       dataframe = dataframe.fullJoin(each, 'Variable');
@@ -56,6 +57,10 @@ export const useJoinedResults = (results) => {
         'Signal',
         ...dataframe.listColumns().filter(each => each !== 'Signal'),
       ]);
+    }
+
+    if (!dataframe) {
+      return [[], []];
     }
 
     const columns = dataframe.listColumns().map(each => ({ title: each, field: each }));

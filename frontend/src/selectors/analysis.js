@@ -16,7 +16,6 @@ export const getSelectedResults = createSelector(
   getAnalysisResults, getSelectedSnapshot, getSelectedLabel, getSelectedSignals, getSelectedMethods,
   (results, snapshot, label, signals, methods) => {
     if (typeof results !== 'object') return [];
-    console.log('all results', snapshot);
     return Object.values(results).filter((each) => {
       return each.snapshot === snapshot &&
         each.label === label &&
@@ -29,7 +28,6 @@ export const getSelectedResults = createSelector(
 export const getSelectedResultsByMethod = createSelector(
   getSelectedResults,
   (results) => {
-    console.log('selected results', results);
     return results.reduce((byMethod, each) => {
       if (!byMethod[each.method]) {
         byMethod[each.method] = [];
