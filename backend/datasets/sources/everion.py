@@ -179,8 +179,11 @@ class EverionSource(SourceBase):
             if index > 0:
                 selected = selected & (df['count'] > split_at[index - 1])
             df_split.append(df[selected])
-        # Append last segment
-        df_split.append(df[df['count'] > split_at[-1]])
+        # If it was splitted append last segment, else whole dataframe
+        if split_at.size == 0:
+            df_split.append(df)
+        else:
+            df_split.append(df[df['count'] > split_at[-1]])
 
         assert np.sum([len(part) for part in df_split]) == len(df)
 

@@ -3,8 +3,11 @@ import pandas as pd
 import numpy as np
 
 from datasets.constants import signal_types
-from datasets.utils import is_non_zero_file
+from datasets.utils import is_zero_file
 from datasets.sources.source_base import SourceBase
+
+import logging
+logger = logging.getLogger(__name__)
 
 class EmpaticaE4Source(SourceBase):
 
@@ -129,7 +132,7 @@ class EmpaticaE4Source(SourceBase):
         df['index'] = df['index'].apply(lambda x: start_time + pd.Timedelta(x, unit='s'))
         df.set_index('index', inplace=True)
 
-        return { 'ibi': df['ibi'] }
+        return {'ibi': df['ibi']}
 
     @staticmethod
     def read_tags(path):
@@ -137,22 +140,26 @@ class EmpaticaE4Source(SourceBase):
             timestamps = np.loadtxt(file, dtype='float64')
 
         index = pd.DatetimeIndex(timestamps * 1e9, tz='UTC')
-        series = pd.Series(index=index, dtype='object')
+        series = pd.Series(
+            index=index,
+            data=np.full(len(index), 'Tag'),
+            dtype='object'
+        )
 
-        return { 'tags': series }
+        return {'tags': series}
 
     def parse(self):
         result = {}
 
         for raw_file in self.raw_files:
             path = raw_file.path.path
-            if not is_non_zero_file(path):
+            if is_zero_file(path):
                 continue
 
             if raw_file.name == 'IBI.csv':
                 data = self.read_ibi(path)
             elif raw_file.name == 'tags.csv':
-                data = self.read_tags(path, self.FILES[raw_file.name])
+                data = self.read_tags(path)
             else:
                 data = self.read_default(path, self.FILES[raw_file.name])
 
