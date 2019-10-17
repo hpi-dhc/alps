@@ -1,7 +1,9 @@
-FILTER = 'FR'
 ANALYSIS = 'AN'
+FILTER = 'FI'
+SOURCE = 'SO'
 
 CHOICES = [
-    (FILTER, 'Filter'),
     (ANALYSIS, 'Analysis'),
+    (FILTER, 'Filter'),
+    (SOURCE, 'Source'),
 ]

@@ -10,6 +10,7 @@ urlpatterns = [
     path('subjects/<uuid:pk>/', views.SubjectDetail.as_view()),
     path('subjects/<uuid:subject>/sessions/', views.SessionListCreate.as_view()),
 
+    path('sessions/', views.SessionListCreate.as_view()),
     path('sessions/<uuid:pk>/', views.SessionDetail.as_view()),
     path('sessions/<uuid:session>/datasets/', views.DatasetListCreate.as_view()),
     path('sessions/<uuid:session>/analysis_samples/', views.AnalysisSampleCreate.as_view()),
@@ -23,6 +24,7 @@ urlpatterns = [
 
     path('analysis/', views.AnalysisListCreate.as_view()),
     path('analysis/<uuid:pk>/', views.AnalysisDetail.as_view()),
+    path('analysis/export/', views.AnalysisExport.as_view()),
 
     path('analysis_samples/<uuid:pk>/', views.AnalysisSampleDetail.as_view()),
 
@@ -32,6 +34,7 @@ urlpatterns = [
     path('analysis_snapshots/', views.AnalysisSnapshotListCreate.as_view()),
 
     path('sync/', views.Synchronization.as_view()),
+    path('filter/', views.FilterSignal.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

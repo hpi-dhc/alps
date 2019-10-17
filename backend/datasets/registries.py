@@ -2,6 +2,8 @@ from abc import ABC
 import importlib
 import pkgutil
 
+from datasets.constants import method_types
+
 class Registry(ABC):
     module = None
     base_class = None
@@ -50,5 +52,21 @@ class AnalysisMethodRegistry(Registry):
     base_class = 'datasets.processing_methods.method_base.AnalysisMethodBase'
 
 
-source_registry = SourceRegistry()
-analysis_method_registry = AnalysisMethodRegistry()
+class FilterMethodRegistry(Registry):
+    module = 'datasets.processing_methods'
+    base_class = 'datasets.processing_methods.method_base.FilterMethodBase'
+
+
+ANALYSIS_METHOD_REGISTRY = AnalysisMethodRegistry()
+FILTER_METHOD_REGISTRY = FilterMethodRegistry()
+SOURCE_REGISTRY = SourceRegistry()
+
+def get_registry(method_type):
+    if method_type == method_types.ANALYSIS:
+        return ANALYSIS_METHOD_REGISTRY
+    if method_type == method_types.FILTER:
+        return FILTER_METHOD_REGISTRY
+    if method_type == method_types.SOURCE:
+        return SOURCE_REGISTRY
+
+    raise RuntimeError(f'No registry for method type {type}')

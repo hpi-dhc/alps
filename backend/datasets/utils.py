@@ -29,6 +29,9 @@ def search_dict(dictionary, search_for):
 def is_non_zero_file(path):
     return os.path.isfile(path) and os.path.getsize(path) > 0
 
+def is_zero_file(path):
+    return not is_non_zero_file(path)
+
 def delete_empty_folders(path, depth):
     while depth > 0:
         try:

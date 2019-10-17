@@ -8,12 +8,12 @@ class DatasetsConfig(AppConfig):
     name = 'datasets'
 
     def ready(self):
-        from datasets.registries import source_registry, analysis_method_registry
+        from datasets import registries
         from datasets.models import Source, ProcessingMethod
         from datasets.constants import method_types
 
         available_sources = []
-        for classname, plugin in source_registry.installed_plugins.items():
+        for classname, plugin in registries.SOURCE_REGISTRY.installed_plugins.items():
             try:
                 source = Source.objects.get(classname=classname)
                 source.name = plugin.name()
@@ -37,7 +37,11 @@ class DatasetsConfig(AppConfig):
             source.save()
 
         available_methods = []
-        for classname, plugin in analysis_method_registry.installed_plugins.items():
+        installed_plugins = {
+            **registries.ANALYSIS_METHOD_REGISTRY.installed_plugins,
+            **registries.FILTER_METHOD_REGISTRY.installed_plugins,
+        }
+        for classname, plugin in installed_plugins.items():
             try:
                 method = ProcessingMethod.objects.get(classname=classname)
                 method.name = plugin.name()
@@ -48,17 +52,15 @@ class DatasetsConfig(AppConfig):
                     name=plugin.name(),
                     classname=classname,
                     installed=True,
-                    type=method_types.ANALYSIS,
+                    type=plugin.type(),
                     options=plugin.options()
                 )
             except ProgrammingError:
-                logger.error('Unable to populate ProcessingMethod table for analysis.')
+                logger.error('Unable to populate ProcessingMethod table.')
                 return
             method.save()
             available_methods.append(method.id)
-        unavailable_methods = ProcessingMethod.objects \
-            .filter(type=method_types.ANALYSIS) \
-            .exclude(id__in=available_methods)
+        unavailable_methods = ProcessingMethod.objects.exclude(id__in=available_methods)
         for method in unavailable_methods:
             method.installed = False
             method.save()

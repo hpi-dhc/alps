@@ -1,5 +1,6 @@
 import logging
 import pandas as pd
+from django.apps import apps
 from django.db import models, connections
 from django.db.models import Q, F
 from django.db.models.expressions import DurationValue
@@ -77,12 +78,76 @@ class Signal(OwnedModel, UUIDModel):
         blank=True,
         null=True
     )
+    raw_signal = models.OneToOneField(
+        'datasets.Signal',
+        on_delete=models.CASCADE,
+        related_name='filtered_signal',
+        blank=True,
+        null=True
+    )
+    process = models.OneToOneField(
+        'datasets.Process',
+        on_delete=models.PROTECT,
+        related_name='+',
+        blank=True,
+        null=True
+    )
     frequency = models.FloatField(blank=True, null=True)
     unit = models.CharField(max_length=32, blank=True, null=True)
-    first_timestamp = models.DateTimeField()
-    last_timestamp = models.DateTimeField()
+    first_timestamp = models.DateTimeField(blank=True, null=True)
+    last_timestamp = models.DateTimeField(blank=True, null=True)
     y_min = models.FloatField(blank=True, null=True)
     y_max = models.FloatField(blank=True, null=True)
+
+    def has_samples(self):
+        return self.signal_chunk_files.count() > 0 or self.samples.count() > 0
+
+    def save_to_files(self, series, chunk_length=3600):
+        if self.has_samples():
+            raise RuntimeError('Cannot save new series for non-empty signal.')
+
+        SignalChunkFile = apps.get_model('datasets', 'SignalChunkFile')
+        lower_bound = series.index.min()
+        lower_bound = lower_bound - pd.Timedelta(
+            microseconds=lower_bound.microsecond
+        )
+        upper_bound = lower_bound + pd.Timedelta(seconds=chunk_length)
+
+        while lower_bound < series.index.max():
+            chunk = series[(series.index >= lower_bound) & (series.index < upper_bound)]
+            if not chunk.empty:
+                signal_file = SignalChunkFile(
+                    signal=self,
+                    first_timestamp=chunk.index.min(),
+                    last_timestamp=chunk.index.max(),
+                    user_id=self.user_id,
+                )
+                signal_file.save_to_disk(chunk)
+                signal_file.save()
+
+            lower_bound = upper_bound
+            upper_bound = lower_bound + pd.Timedelta(seconds=chunk_length)
+
+
+    def save_to_table(self, series):
+        if self.has_samples():
+            raise RuntimeError('Cannot save new series for non-empty signal.')
+
+        if self.type == signal_types.TAGS:
+            sample_model = apps.get_model('datasets', 'Tag')
+        else:
+            sample_model = apps.get_model('datasets', 'Sample')
+
+        samples = [
+            sample_model(
+                timestamp=index,
+                value=value,
+                signal=self
+            )
+            for index, value
+            in series.items()
+        ]
+        sample_model.objects.bulk_create(samples)
 
     def correct_timestamps(self, timeshift=pd.Timedelta(0, 's'), stretch_factor=1, reference_time=None):
         if reference_time is None:
@@ -94,21 +159,22 @@ class Signal(OwnedModel, UUIDModel):
             self.first_timestamp = ordered_files.first().first_timestamp
             self.last_timestamp = ordered_files.last().last_timestamp
         else:
-            self.samples.all().update(
+            samples = self.samples
+            if self.tags.count() > 0:
+                samples = self.tags
+            samples.all().update(
                 timestamp=(F('timestamp') - reference_time) * stretch_factor + reference_time + DurationValue(timeshift)
             )
-            ordered_samples = self.samples.all().order_by('timestamp')
+            ordered_samples = samples.all().order_by('timestamp')
             self.first_timestamp = ordered_samples.first().timestamp
             self.last_timestamp = ordered_samples.last().timestamp
         self.save()
 
-
-
     def samples_dataframe(self, start=None, end=None):
         if start is None:
-            start = pd.Timestamp(1970, tz='UTC')
+            start = pd.Timestamp.min.tz_localize('UTC')
         if end is None:
-            end = pd.Timestamp.now('UTC')
+            end = pd.Timestamp.max.tz_localize('UTC')
 
         if self.signal_chunk_files.count() > 0:
             LOGGER.debug(

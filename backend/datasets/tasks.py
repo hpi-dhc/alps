@@ -3,7 +3,7 @@ import numpy as np
 from celery import Task, shared_task
 from django.db import transaction
 
-from datasets.models import Dataset, Signal, Sample, Tag, SignalChunkFile, Analysis
+from datasets.models import Dataset, Signal, Sample, Tag, SignalChunkFile, Analysis, Process
 from datasets.constants import process_status, signal_types
 
 import logging
@@ -16,59 +16,12 @@ class DatasetTask(Task):
         dataset.status = process_status.ERROR
         dataset.save()
 
-class AnalysisTask(Task):
+class ProcessTask(Task):
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
-        analysis = Analysis.objects.get(id=args[0])
-        analysis.status = process_status.ERROR
-        analysis.save()
-
-def save_to_sample_table(series, signal):
-    samples = [
-        Sample(
-            timestamp=index,
-            value=value,
-            signal=signal
-        )
-        for index, value
-        in series.items()
-    ]
-    Sample.objects.bulk_create(samples)
-
-def save_to_tag_table(series, signal):
-    tags = [
-        Tag(
-            timestamp=index,
-            value=value,
-            signal=signal
-        )
-        for index, value
-        in series.items()
-    ]
-    Tag.objects.bulk_create(tags)
-
-def save_to_signal_file(series, signal):
-    CHUNK_LENGTH = 3600
-    lower_bound = series.index.min()
-    lower_bound = lower_bound - pd.Timedelta(
-        microseconds=lower_bound.microsecond
-    )
-    upper_bound = lower_bound + pd.Timedelta(seconds=CHUNK_LENGTH)
-
-    while lower_bound < series.index.max():
-        chunk = series[(series.index >= lower_bound) & (series.index < upper_bound)]
-        if not chunk.empty:
-            signal_file = SignalChunkFile(
-                signal=signal,
-                first_timestamp=chunk.index.min(),
-                last_timestamp=chunk.index.max(),
-                user_id=signal.user_id,
-            )
-            signal_file.save_to_disk(chunk)
-            signal_file.save()
-
-        lower_bound = upper_bound
-        upper_bound = lower_bound + pd.Timedelta(seconds=CHUNK_LENGTH)
+        process = Process.objects.get(task=task_id)
+        process.status = process_status.ERROR
+        process.save()
 
 def save_parsed_signals(dataset, signals):
     signal_ids = []
@@ -76,6 +29,9 @@ def save_parsed_signals(dataset, signals):
     for signal_name, data in signals.items():
         signal_type = data.get('type', signal_types.OTHER)
         series = data['series']
+
+        if series.empty:
+            continue
 
         y_min = None
         y_max = None
@@ -90,8 +46,8 @@ def save_parsed_signals(dataset, signals):
             raw_file_id=data.get('raw_file_id'),
             frequency=data.get('frequency'),
             unit=data.get('unit'),
-            first_timestamp=series.first_valid_index(),
-            last_timestamp=series.last_valid_index(),
+            first_timestamp=series.index.min(),
+            last_timestamp=series.index.max(),
             y_min=y_min,
             y_max=y_max,
             user_id=dataset.user_id,
@@ -99,12 +55,10 @@ def save_parsed_signals(dataset, signals):
         signal.save()
         signal_ids.append(signal.id)
 
-        if signal_type in [signal_types.NN_INTERVAL, signal_types.RR_INTERVAL]:
-            save_to_sample_table(series, signal)
-        elif signal_type is signal_types.TAGS:
-            save_to_tag_table(series, signal)
+        if signal_type in [signal_types.NN_INTERVAL, signal_types.RR_INTERVAL, signal_types.TAGS]:
+            signal.save_to_table(series)
         else:
-            save_to_signal_file(series, signal)
+            signal.save_to_files(series)
 
     return signal_ids
 
@@ -126,14 +80,52 @@ def parse_raw_files(file_ids, dataset_id):
 
     return signal_ids
 
-@shared_task(base=AnalysisTask)
-def start_analysis(analysis_id):
+
+@shared_task(base=ProcessTask, bind=True)
+def start_analysis(self, analysis_id):
     analysis = Analysis.objects.get(id=analysis_id)
-    analysis.status = process_status.PROCESSING
-    analysis.save()
+    analysis.process.task = self.request.id
+    analysis.process.status = process_status.PROCESSING
+    analysis.process.save()
 
     analysis.result = analysis.compute()
-    analysis.status = process_status.PROCESSED
     analysis.save()
 
+    analysis.process.status = process_status.PROCESSED
+    analysis.process.save()
+
     return analysis_id
+
+
+@shared_task(base=ProcessTask, bind=True)
+def filter_signal(self, signal_id):
+    signal = Signal.objects.get(id=signal_id)
+    signal.process.task = self.request.id
+    signal.process.status = process_status.PROCESSING
+    signal.process.save()
+
+    plugin = signal.process.method.get_plugin()
+    filter_instance = plugin(signal.id)
+    filter_result = filter_instance.process()
+    filtered_series = filter_result.get('series')
+    result_info = filter_result.get('info')
+
+    if hasattr(signal, 'filtered_signal'):
+        signal.filtered_signal.delete()
+
+    if signal.raw_signal.samples.count() > 0:
+        signal.save_to_table(filtered_series)
+    else:
+        signal.save_to_files(filtered_series)
+
+    signal.y_min = filtered_series.min()
+    signal.y_max = filtered_series.max()
+    signal.first_timestamp = filtered_series.first_valid_index()
+    signal.last_timestamp = filtered_series.last_valid_index()
+    signal.save()
+
+    signal.process.status = process_status.PROCESSED
+    signal.process.info = result_info
+    signal.process.save()
+
+    return signal_id

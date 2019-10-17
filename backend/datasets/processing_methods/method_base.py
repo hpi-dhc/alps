@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from django.apps import apps
+from datasets.constants import method_types
 
-class AnalysisMethodBase(ABC):
+class MethodBase(ABC):
 
     @classmethod
     @abstractmethod
@@ -14,9 +15,9 @@ class AnalysisMethodBase(ABC):
 
     @classmethod
     @abstractmethod
-    def domain(cls):
+    def type(cls):
         """
-        Returns one of the predefined domain types.
+        Returns one of the predefined method types.
         """
 
     @classmethod
@@ -43,6 +44,19 @@ class AnalysisMethodBase(ABC):
         Returns a dictionary with the results of the analysis.
         """
 
+
+class AnalysisMethodBase(MethodBase):
+
+    @classmethod
+    def type(cls):
+        return method_types.ANALYSIS
+
+    @abstractmethod
+    def process(self):
+        """
+        Returns a dictionary with the results of the analysis.
+        """
+
     def __init__(self, analysis_id):
         analysis_model = apps.get_model(app_label='datasets', model_name='Analysis')
         analysis_sample_model = apps.get_model(app_label='datasets', model_name='AnalysisSample')
@@ -52,4 +66,24 @@ class AnalysisMethodBase(ABC):
             session=self.signal.dataset.session.id,
             label=analysis.label.id
         )
-        self.configuration = analysis.configuration
+        self.configuration = analysis.process.configuration
+
+
+class FilterMethodBase(MethodBase):
+
+    @classmethod
+    def type(cls):
+        return method_types.FILTER
+
+    @abstractmethod
+    def process(self):
+        """
+        Returns a dictionary with pandas dataframe and comments about
+        the filtering, e.g. number of removed or corrected samples
+        """
+
+    def __init__(self, signal_id):
+        signal_model = apps.get_model(app_label='datasets', model_name='Signal')
+        self.signal = signal_model.objects.get(id=signal_id)
+        self.samples = self.signal.raw_signal.samples_dataframe()
+        self.configuration = self.signal.process.configuration

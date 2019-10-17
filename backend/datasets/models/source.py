@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 from .base import UUIDModel
-from datasets.registries import source_registry
+from datasets.registries import SOURCE_REGISTRY
 
 
 class Source(UUIDModel):
@@ -11,11 +11,11 @@ class Source(UUIDModel):
     fileOptions = JSONField()
 
     def parse(self, file_ids):
-        source_parser = source_registry.get_plugin(self.classname)(file_ids)
+        source_parser = SOURCE_REGISTRY.get_plugin(self.classname)(file_ids)
         return source_parser.parse()
 
     def validate_files(self, files):
-        source_parser = source_registry.get_plugin(self.classname)
+        source_parser = SOURCE_REGISTRY.get_plugin(self.classname)
         return source_parser.validate_files(files)
 
     def __str__(self):

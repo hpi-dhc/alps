@@ -1,6 +1,8 @@
+from django.db import transaction
 from rest_framework import serializers
 
-from . import models
+from datasets import models
+from datasets.constants import method_types
 
 class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
     def get_queryset(self):
@@ -9,6 +11,20 @@ class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
         if not request or not queryset:
             return None
         return queryset.filter(user=request.user)
+
+
+class ProcessingMethodSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.ProcessingMethod
+        exclude = ('classname',)
+
+
+class ProcessSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.Process
+        exclude = ('task', 'user', 'created_at')
 
 
 class AnalysisLabelSerializer(serializers.ModelSerializer):
@@ -38,12 +54,33 @@ class AnalysisSerializer(serializers.ModelSerializer):
         queryset=models.AnalysisSnapshot,
         default=None
     )
-    configuration = serializers.JSONField(default={})
+    process = ProcessSerializer(read_only=True)
+    configuration = serializers.JSONField(write_only=True, default={})
 
     class Meta:
         model = models.Analysis
         exclude = ('user',)
         read_only_fields = ('result', 'status')
+
+    def create(self, validated_data):
+        configuration = validated_data.pop('configuration', {})
+        instance = super(AnalysisSerializer, self).create(validated_data)
+
+        plugin = instance.method.get_plugin()
+        configuration = {
+            **plugin.default_configuration(),
+            **configuration
+        }
+
+        process = ProcessSerializer().create({
+            'configuration': configuration,
+            'method': instance.method,
+            'user': instance.user
+        })
+        instance.process = process
+        instance.save()
+
+        return instance
 
 
 class AnalysisSnapshotSerializer(serializers.ModelSerializer):
@@ -57,19 +94,67 @@ class AnalysisSnapshotSerializer(serializers.ModelSerializer):
         exclude = ('user',)
 
 
-class ProcessingMethodSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = models.ProcessingMethod
-        exclude = ('classname',)
+class AnalysisExportSerializer(serializers.Serializer):
+    sessions = UserFilteredPrimaryKeyRelatedField(
+        queryset=models.Session.objects,
+        many=True
+    )
+    labels = UserFilteredPrimaryKeyRelatedField(
+        queryset=models.AnalysisLabel.objects,
+        many=True
+    )
 
 
 class SignalSerializer(serializers.ModelSerializer):
+    process = ProcessSerializer(read_only=True)
 
     class Meta:
         model = models.Signal
         exclude = ('user', )
         read_only_fields = ('raw_file',)
+
+
+class FilteredSignalSerializer(serializers.Serializer):
+    signal = UserFilteredPrimaryKeyRelatedField(queryset=models.Signal.objects)
+    filter = serializers.PrimaryKeyRelatedField(
+        queryset=models.ProcessingMethod.objects
+    )
+    configuration = serializers.JSONField(default={})
+
+    @transaction.atomic
+    def create(self, validated_data):
+        signal = validated_data.get('signal')
+        filter = validated_data.get('filter')
+        plugin = filter.get_plugin()
+        configuration = {
+            **plugin.default_configuration(),
+            **validated_data.get('configuration')
+        }
+
+        if hasattr(signal, 'filtered_signal'):
+            signal.filtered_signal.delete()
+
+        process = models.Process.objects.create(
+            method=filter,
+            configuration=configuration,
+            user=signal.user,
+        )
+
+        filtered_signal = models.Signal.objects.create(
+            name=signal.name + ' Filtered',
+            dataset=signal.dataset,
+            type=signal.type,
+            raw_signal=signal,
+            process=process,
+            frequency=signal.frequency,
+            unit=signal.unit,
+            user=signal.user,
+        )
+
+        return filtered_signal
+
+    def to_representation(self, instance):
+        return SignalSerializer().to_representation(instance)
 
 
 class RawFileSerializer(serializers.ModelSerializer):
