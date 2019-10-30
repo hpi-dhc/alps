@@ -31,7 +31,11 @@ class Breadcrumb extends React.PureComponent {
     } else if (pathname.startsWith('/sessions')) {
       const match = pathname.match(/^\/sessions\/([a-z0-9-]+)/);
       const session = sessions[match[1]];
-      const title = session ? session.title : '';
+      const subject = subjects[session.subject];
+      let title = session ? session.title : '';
+      if (subject) {
+        title = subject.identifier + ' - ' + title;
+      }
       this.setState({ title, goBackTo: `/subjects/${session.subject}` });
     } else {
       this.setState({ title: '', goBackTo: '' });
