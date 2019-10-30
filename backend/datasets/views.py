@@ -2,7 +2,7 @@ import logging
 import math
 import operator
 import inspect
-import io
+from distutils.util import strtobool
 from functools import reduce
 import jointly
 import pandas as pd
@@ -11,9 +11,8 @@ from django.db import transaction, connection
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from rest_framework import exceptions, generics, views, viewsets
+from rest_framework import exceptions, generics, views
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
 from . import serializers
@@ -177,7 +176,7 @@ class SampleList(generics.ListAPIView):
         signal = get_object_or_404(models.Signal, pk=self.kwargs['signal'])
         self.check_object_permissions(self.request, signal)
 
-        normalize = bool(request.query_params.get('normalize', False))
+        normalize = bool(strtobool(request.query_params.get('normalize', 'false')))
         max_samples = int(request.query_params.get('max_samples', 2000))
         if math.isnan(max_samples):
             raise exceptions.ValidationError('max_samples must be a number')
