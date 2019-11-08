@@ -285,9 +285,11 @@ class SampleList(generics.ListAPIView):
 
 
 class AnalysisLabelListCreate(generics.ListCreateAPIView):
-    queryset = models.AnalysisLabel.objects
     serializer_class = serializers.AnalysisLabelSerializer
     permission_classes = (IsAuthenticated, IsOwner)
+
+    def get_queryset(self):
+        return models.AnalysisLabel.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
