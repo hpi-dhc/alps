@@ -1,0 +1,65 @@
+version: '3.5'
+services:
+
+  nginx_frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.production
+      args:
+        REACT_APP_BACKEND_URL: http://localhost:8000
+    restart: always
+    volumes:
+      - backend_static_files:/var/www/localhost/htdocs/backend:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    expose:
+      - 80
+      - 8000
+    ports:
+      - 80:80
+      - 8000:8000
+    depends_on: 
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.production
+    image: &backend backend
+    restart: always
+    volumes:
+      - backend_static_files:/app/staticfiles
+      - ./backend/uploads:/app/uploads
+    depends_on:
+      - db
+    env_file: production.env
+
+  worker:
+    image: *backend
+    command: celery --app=backend worker --hostname=worker@%h
+    restart: always
+    depends_on:
+      - db
+      - redis
+    env_file: production.env
+
+  db:
+    image: postgres:11.3
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_USER: sap-ichi2020
+      POSTGRES_PASSWORD: SNhd7GEk
+      POSTGRES_DB: sap-ichi2020
+
+  redis:
+    image: redis:5.0
+    restart: always
+    volumes:
+      - redis_data:/data
+
+volumes:
+  backend_uploads:
+  backend_static_files:
+  postgres_data:
+  redis_data:

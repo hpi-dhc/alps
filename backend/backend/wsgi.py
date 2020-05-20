@@ -9,8 +9,11 @@ https://docs.djangoproject.com/en/2.2/howto/deployment/wsgi/
 
 import os
 
-import ptvsd
-ptvsd.enable_attach(address=('0.0.0.0', 5678), redirect_output=True)
+try:
+    import ptvsd
+    ptvsd.enable_attach(address=('0.0.0.0', 5678), redirect_output=True)
+except:
+    pass
 
 from django.core.wsgi import get_wsgi_application
 

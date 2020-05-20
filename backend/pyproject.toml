@@ -1,0 +1,34 @@
+[tool.poetry]
+name = "backend"
+version = "0.1.0"
+description = ""
+authors = ["Felix Musmann <felix.musmann@student.hpi.de>"]
+
+[tool.poetry.dependencies]
+python = "~3.7"
+astropy = "~3.2.3"
+celery = "~4.4.2"
+django = "~2.2"
+django-cors-headers = "~3.2.1"
+django-rest-auth = "~0.9.5"
+djangorestframework = "~3.11.0"
+fastparquet = { git = "https://github.com/dask/fastparquet.git", rev = "6cc35e1" }
+jointly = "~0.1.5"
+numpy = "~1.18.4"
+pandas = "~1.0.3"
+plotly = "~4.7.1"
+psycopg2 = "~2.8.5"
+pyedflib = "~0.1.17"
+python-snappy = "~0.5.4"
+redis = "~3.5.2"
+scipy = "~1.3.1"
+nolds = "~0.5.2"
+
+[tool.poetry.dev-dependencies]
+ptvsd = "~4.3.2"
+pylint = "~2.5.2"
+pylint-django = "~2.0.15"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"

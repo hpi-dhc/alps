@@ -2,7 +2,9 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { keysToCamel, keysToSnake } from '../utils';
 
-const serverURL = 'http://localhost:8000/';
+const serverURL = process.env.REACT_APP_BACKEND_URL;
+
+console.log('Backend at', serverURL);
 
 export const authEndpoint = axios.create({
   baseURL: serverURL + 'auth/',

@@ -1,15 +1,17 @@
-FROM python:3
+FROM python:3.7-slim
+
+ENV POETRY_VIRTUALENVS_CREATE=FALSE \
+    POETRY_VERSION=1.0.4
 
 RUN apt-get update
-RUN apt-get install -y libsnappy-dev
+RUN apt-get install --no-install-recommends -y \
+    build-essential libpq-dev libsnappy-dev git
 
-RUN pip install pipenv
-
-RUN mkdir /app
 WORKDIR /app
 
-COPY Pipfile /app
-COPY Pipfile.lock /app
-RUN pipenv install --dev --system --deploy --ignore-pipfile
+RUN pip install "poetry==${POETRY_VERSION}"
+
+COPY pyproject.toml poetry.lock /app/
+RUN poetry install --no-interaction --no-ansi
 
 COPY . /app

@@ -20,15 +20,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '7nzyj=794_*o%joz=0^e&0$iq0xh-nfzn4u8en_f$$)@-(3kc&'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DJANGO_DEBUG', False)
 
-ALLOWED_HOSTS = [
-    'localhost',
-    'vm-webhrv.dhclab.i.hpi.de'
-]
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost').split(',')
 
 
 # Application definition
@@ -60,10 +57,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ORIGIN_WHITELIST = [
-    'http://localhost:3000',
-    'http://vm-webhrv.dhclab.i.hpi.de:3000'
-]
+CORS_ORIGIN_WHITELIST = os.getenv('DJANGO_CORS_ORIGIN_WHITELIST', 'http://localhost').split(' ')
 
 ROOT_URLCONF = 'backend.urls'
 
@@ -124,10 +118,11 @@ REST_FRAMEWORK = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'HOST': 'db',
-        'PORT': 5432,
+        'NAME': os.getenv('POSTGRES_DB', 'postgres'),
+        'USER': os.getenv('POSTGRES_USER', 'postgres'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+        'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
+        'PORT': os.getenv('POSTGRES_PORT', 5432),
     }
 }
 
@@ -135,7 +130,7 @@ FIXTURE_DIRS = (
     '/datasets/fixtures/',
 )
 
-MEDIA_ROOT = './uploads/'
+MEDIA_ROOT = os.getenv('DJANGO_MEDIA_ROOT', './uploads')
 
 # Authentication / Password Validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
@@ -175,7 +170,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = os.getenv('DJANGO_STATIC_URL', '/static/')
+STATIC_ROOT = os.getenv('DJANGO_STATIC_ROOT')
 
 
 # Task Queue

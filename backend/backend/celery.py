@@ -2,8 +2,11 @@ from __future__ import absolute_import, unicode_literals
 import os
 from celery import Celery
 
-import ptvsd
-ptvsd.enable_attach(address=('0.0.0.0', 5678), redirect_output=True)
+try:
+    import ptvsd
+    ptvsd.enable_attach(address=('0.0.0.0', 5678), redirect_output=True)
+except:
+    pass
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 

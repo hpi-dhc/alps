@@ -10,10 +10,12 @@ services:
       - '3000:3000'
       - '9222:9222'
     volumes:
-      - ./frontend:/app
-      - ./frontend/node_modules:/app/node_modules
+      - ./frontend/:/app/
+      - /app/node_modules/
+    stdin_open: true
     environment:
       NODE_ENV: development
+      REACT_APP_BACKEND_URL: http://localhost:8000
 
   backend:
     build:
@@ -21,14 +23,26 @@ services:
       dockerfile: Dockerfile
     image: &backend backend
     command: python manage.py runserver --noreload 0.0.0.0:8000
-    restart: unless-stopped
     ports:
       - '8000:8000'
       - '5678:5678'
     volumes:
-      - ./backend:/app
+      - ./backend/:/app/
     depends_on:
       - db
+    env_file: .env
+
+  worker:
+    image: *backend
+    command: celery --app=backend worker --hostname=worker@%h -P solo --loglevel=INFO
+    ports:
+      - '5679:5678'
+    volumes:
+      - ./backend/:/app/
+    depends_on:
+      - db
+      - redis
+    env_file: .env
 
   db:
     image: postgres:11.3
@@ -37,32 +51,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
 
-  worker:
-    image: *backend
-    command: celery --app=backend worker --hostname=worker@%h -P solo --loglevel=INFO
-    restart: unless-stopped
-    ports:
-      - '5679:5678'
-    volumes:
-      - ./backend:/app
-    depends_on:
-      - db
-      - redis
-    
-  flower:
-    image: mher/flower
-    ports:
-      - '5555:5555'
-    environment:
-      CELERY_BROKER_URL: redis://redis:6379/0
-      FLOWER_PORT: 5555
-    depends_on:
-      - worker
-
   redis:
     image: redis:5.0
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
 
