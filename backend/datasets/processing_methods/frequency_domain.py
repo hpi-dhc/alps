@@ -110,11 +110,12 @@ class FrequencyDomainAnalysis(AnalysisMethodBase):
 
         freq, psd = signal.welch(
             nn_interpol,
-            4.0,
+            interp_freq,
             nfft=nfft,
             nperseg=nperseg,
             window='hamming',
             scaling='density',
+            detrend='linear'
         )
 
         return freq, psd

@@ -61,7 +61,6 @@ class SourceBase(ABC):
         """
         Returns a dict with meta information and parsed signal data.
         Parsed data has to be passed as Series with tz-aware DateTimeIndex.
-        Each result must include either a raw_file_id or the parsed data.
         If no signal type is given, it will be set to signal_type.OTHER.
 
         Source file objects can be accessed via self.raw_files.
