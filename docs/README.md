@@ -39,11 +39,11 @@ The repository contains two docker-compose files for development and production.
    ```
 3. Populate database with necessary tables.
     ```sh
-    docker-compose exec web python manage.py migrate --noinput
+    docker-compose exec backend python manage.py migrate --noinput
     ```
 4. Generate admin user.
     ```sh
-    docker-compose exec web python manage.py createsuperuser
+    docker-compose exec backend python manage.py createsuperuser
     ```
 5. The frontend should be available under http://localhost:3000 and the backend under http://localhost:8000.
 
@@ -68,10 +68,10 @@ The repository contains two docker-compose files for development and production.
     ```
 7. Populate database with necessary tables.
     ```sh
-    docker-compose exec web python manage.py migrate --noinput
+    docker-compose exec backend python manage.py migrate --noinput
     ```
 8. Generate admin user.
     ```sh
-    docker-compose exec web python manage.py createsuperuser
+    docker-compose exec backend python manage.py createsuperuser
     ```
 9. You should be able to login with your generated user.
