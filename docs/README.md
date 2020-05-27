@@ -14,7 +14,9 @@ A case study on Heart Rate Variability (HRV) shows that the platform simplifies 
 Download the full paper:  
 [A Web Platform For Analyzing Multimodal Sensor Data in the Context of Digital Health](https://link-to-paper)
 
-## Demo Instance
+## Demo
+
+You can find some videos demonstrating the interface on the [GitHub page](https://hpi-dhc.github.io/signal-analysis-platform/).
 
 A [demo instance](http://ec2-54-165-78-234.compute-1.amazonaws.com/) of the Signal Analysis Platform is currently available. The **file upload is limited to 1MB** and will fail otherwise without warning. Do not upload any confidential data. The automatic synchronization will most likely fail, due to restricted resources on the demo system.
 
