@@ -1,4 +1,4 @@
-# Web Platform for Analyzing Multimodal Sensor Data
+# ALPS: A Web Platform for Analyzing Multimodal Sensor Data
 
 ![Preprocessing Screen](/docs/images/preprocess_screen.png)
 
@@ -12,11 +12,11 @@ Plug-ins for new devices, filtering and analysis methods allow the customization
 A case study on Heart Rate Variability (HRV) shows that the platform simplifies the comparative analysis of multiple signals and supports the exploration of data from different wearables.
 
 Download the full paper:  
-[A Web Platform For Analyzing Multimodal Sensor Data in the Context of Digital Health](https://link-to-paper)
+[ALPS: A Web Platform For Analyzing Multimodal Sensor Data in the Context of Digital Health](https://link-to-paper)
 
 ## Demo
 
-You can find some videos demonstrating the interface on the [GitHub page](https://hpi-dhc.github.io/signal-analysis-platform/).
+You can find some videos demonstrating the interface on the [GitHub page](https://hpi-dhc.github.io/alps/).
 
 A [demo instance](http://ec2-54-165-78-234.compute-1.amazonaws.com/) of the Signal Analysis Platform is currently available. The **file upload is limited to 1MB** and will fail otherwise without warning. Do not upload any confidential data. The automatic synchronization will most likely fail, due to restricted resources on the demo system.
 
