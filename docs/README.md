@@ -1,3 +1,7 @@
+<p align="center">
+    <img alt="ALPS Logo" src="../docs/images/logo_vertical.png">
+</p>
+
 # ALPS: A Web Platform for Analyzing Multimodal Sensor Data
 
 ![Preprocessing Screen](/docs/images/preprocess_screen.png)
