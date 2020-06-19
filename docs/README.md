@@ -1,5 +1,5 @@
 <p align="center">
-    <img alt="ALPS Logo" src="https://github.com/hpi-dhc/alps/raw/master/docs/images/logo_vertical.png">
+    <img alt="ALPS Logo" width="128px" src="https://raw.githubusercontent.com/hpi-dhc/alps/master/docs/images/logo_vertical.svg">
 </p>
 
 # ALPS: A Web Platform for Analyzing Multimodal Sensor Data

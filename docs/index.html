@@ -1,26 +1,90 @@
 <!DOCTYPE html>
-<html>
+<html class="has-navbar-fixed-top">
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>ALPS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.2/css/bulma.min.css">
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // Get all "navbar-burger" elements
+      const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+
+      // Check if there are any navbar burgers
+      if ($navbarBurgers.length > 0) {
+
+        // Add a click event on each of them
+        $navbarBurgers.forEach( el => {
+          el.addEventListener('click', () => {
+
+            // Get the target from the "data-target" attribute
+            const target = el.dataset.target;
+            const $target = document.getElementById(target);
+
+            // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
+            el.classList.toggle('is-active');
+            $target.classList.toggle('is-active');
+
+          });
+        });
+      }
+
+      });
+  </script>
 </head>
 <body>
-  <div class="hero is-info is-bold">
+  <nav class="navbar has-shadow is-spaced is-fixed-top" role="navigation" aria-label="main navigation">
+    <div class="container">
+      <div class="navbar-brand">
+        <div class="navbar-item">
+          <img alt="ALPS: A Web Platform for Analyzing Multimodal Sensor Data" style="height:28px" src="images/logo_horizontal.svg">
+        </div>
+        <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbar">
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+        </a>
+      </div>
+      <div id="navbar" class="navbar-menu">
+        <div class="navbar-start">
+          <a class="navbar-item" href="#videos">
+            <span>Videos</span>
+          </a>
+        </div>
+        <div class="navbar-end">
+          <a class="navbar-item" href="https://github.com/hpi-dhc/alps" target="_blank">
+            <span class="icon" style="color: #333;">
+              <svg style="width:24px;height:24px" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M12,2A10,10 0 0,0 2,12C2,16.42 4.87,20.17 8.84,21.5C9.34,21.58 9.5,21.27 9.5,21C9.5,20.77 9.5,20.14 9.5,19.31C6.73,19.91 6.14,17.97 6.14,17.97C5.68,16.81 5.03,16.5 5.03,16.5C4.12,15.88 5.1,15.9 5.1,15.9C6.1,15.97 6.63,16.93 6.63,16.93C7.5,18.45 8.97,18 9.54,17.76C9.63,17.11 9.89,16.67 10.17,16.42C7.95,16.17 5.62,15.31 5.62,11.5C5.62,10.39 6,9.5 6.65,8.79C6.55,8.54 6.2,7.5 6.75,6.15C6.75,6.15 7.59,5.88 9.5,7.17C10.29,6.95 11.15,6.84 12,6.84C12.85,6.84 13.71,6.95 14.5,7.17C16.41,5.88 17.25,6.15 17.25,6.15C17.8,7.5 17.45,8.54 17.35,8.79C18,9.5 18.38,10.39 18.38,11.5C18.38,15.32 16.04,16.16 13.81,16.41C14.17,16.72 14.5,17.33 14.5,18.26C14.5,19.6 14.5,20.68 14.5,21C14.5,21.27 14.66,21.59 15.17,21.5C19.14,20.16 22,16.42 22,12A10,10 0 0,0 12,2Z" />
+              </svg>
+            </span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <div class="hero is-fullheight">
     <div class="hero-body">
       <div class="container">
-        <h1 class="title">
-          ALPS
-        </h1>
-        <p class="subtitle">
-          A Web Platform for Analyzing Multimodal Sensor Data
-        </p>
+        <div class="columns">
+          <div class="column">
+            <p class="title is-1">
+              A Web Platform for Analyzing Multimodal Sensor Data
+            </p>
+            <p>The Internet of Things enables us to record a vast amount of information about activities, the environment and the physiological state of a person. In particular, wearables promise the development of new methods for prevention and treatment of diseases. Clinical studies often involve multiple devices from different manufacturers, which make use of different data formats and usually offer no way to synchronize them. Additionally, existing analysis tools are often tailored to a very specific use case. Thus, professionals working with data collection and analysis execute a lot of manual work to gather and combine the recorded data. ALPS is an extensible web platform with an integrated event-based synchronization method that enables researchers with clinical and engineering background to analyze multimodal sensor data. Plug-ins for new devices, filtering and analysis methods allow the customization for different research scenarios.</p>
+          </div>
+          <div class="column">
+            <img alt="Preprocessing Screen" src="images/preprocess_screen.png">
+          </div>
+        </div>
       </div>
     </div>
   </div>
   <section class="section">
+    <a name="videos"></a>
     <div class="container">
       <h2 class="title is-4">Videos</h2>
       <div class="tile is-anchestor">
