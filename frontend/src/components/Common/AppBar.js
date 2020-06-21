@@ -14,10 +14,10 @@ import {
 } from '@material-ui/core';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 import SettingsIcon from '@material-ui/icons/Settings';
-import HeartIcon from '@material-ui/icons/Timeline';
 
 import Breadcrumb from './Breadcrumb';
 import { requestLogout } from '../../actions/authentication';
+import AlpsIcon from './AlpsIcon';
 
 class AppBar extends React.PureComponent {
   static propTypes = {
@@ -46,14 +46,14 @@ class AppBar extends React.PureComponent {
       <AppBarMUI position='sticky' className={classes.appBar}>
         <Toolbar>
           <Link className={classes.titleLink} to='/'>
-            <HeartIcon className={classes.icon} />
+            <AlpsIcon className={classes.icon} />
             <Typography
               className={classes.title}
               component='h1'
               variant='h6'
               noWrap
             >
-              HRV
+              ALPS
             </Typography>
           </Link>
           <Breadcrumb />
