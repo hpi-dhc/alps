@@ -10,6 +10,7 @@ import {
   Typography,
   withStyles,
 } from '@material-ui/core';
+import AlpsIcon from '../Common/AlpsIcon'
 
 class LoginForm extends Component {
   constructor (props) {
@@ -57,8 +58,9 @@ class LoginForm extends Component {
       <main className={classes.main}>
         <CssBaseline />
         <Paper className={classes.paper}>
+          <AlpsIcon color="primary" style={{ fontSize: '64px' }} />
           <Typography component='h1' variant='h5'>
-            HRV Analysis Platform
+            ALPS
           </Typography>
           <Typography variant='body1' color='error'>{this.getErrorMessage()}</Typography>
           <form className={classes.form} onSubmit={this.handleSubmit}>
