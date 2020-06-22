@@ -12,7 +12,7 @@ from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import exceptions, generics, views
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.response import Response
 
 from . import serializers
@@ -45,7 +45,7 @@ class SubjectListCreate(generics.ListCreateAPIView):
 class SubjectDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = models.Subject.objects
     serializer_class = serializers.SubjectSerializer
-    permission_classes = (IsAuthenticated, IsOwner)
+    permission_classes = (DjangoModelPermissions, IsOwner)
 
 
 class SessionListCreate(generics.ListCreateAPIView):
@@ -69,7 +69,7 @@ class SessionListCreate(generics.ListCreateAPIView):
 class SessionDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = models.Session.objects
     serializer_class = serializers.SessionDetailSerializer
-    permission_classes = (IsAuthenticated, IsOwner)
+    permission_classes = (DjangoModelPermissions, IsOwner)
 
 
 class DatasetListCreate(generics.ListCreateAPIView):
@@ -90,7 +90,7 @@ class DatasetListCreate(generics.ListCreateAPIView):
 class DatasetDetail(generics.RetrieveDestroyAPIView):
     queryset = models.Dataset.objects
     serializer_class = serializers.DatasetSerializer
-    permission_classes = (IsAuthenticated, IsOwner)
+    permission_classes = (DjangoModelPermissions, IsOwner)
 
 
 class DatasetReparse(views.APIView):
