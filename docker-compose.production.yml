@@ -6,7 +6,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.production
       args:
-        REACT_APP_BACKEND_URL: http://localhost:8000
+        REACT_APP_BACKEND_URL: http://localhost:8000/
     restart: always
     volumes:
       - backend_static_files:/var/www/localhost/htdocs/backend:ro

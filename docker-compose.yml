@@ -15,7 +15,7 @@ services:
     stdin_open: true
     environment:
       NODE_ENV: development
-      REACT_APP_BACKEND_URL: http://localhost:8000
+      REACT_APP_BACKEND_URL: http://localhost:8000/
 
   backend:
     build:
