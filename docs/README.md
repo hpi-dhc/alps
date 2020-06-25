@@ -16,7 +16,7 @@ Plug-ins for new devices, filtering and analysis methods allow the customization
 A case study on Heart Rate Variability (HRV) shows that the platform simplifies the comparative analysis of multiple signals and supports the exploration of data from different wearables.
 
 Download the full paper:  
-[ALPS: A Web Platform For Analyzing Multimodal Sensor Data in the Context of Digital Health]([https://link-to-paper](https://github.com/hpi-dhc/alps/raw/master/docs/alps_paper.pdf))
+[ALPS: A Web Platform For Analyzing Multimodal Sensor Data in the Context of Digital Health](https://github.com/hpi-dhc/alps/raw/master/docs/alps_paper.pdf)
 
 ## Demo
 
