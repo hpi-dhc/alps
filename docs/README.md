@@ -2,7 +2,7 @@
     <img alt="ALPS Logo" width="128px" src="https://raw.githubusercontent.com/hpi-dhc/alps/master/docs/images/logo_vertical.svg">
 </p>
 
-# ALPS: A Web Platform for Analyzing Multimodal Sensor Data
+# A Web Platform for Analyzing Multimodal Sensor Data
 
 ![Preprocessing Screen](/docs/images/preprocess_screen.png)
 
