@@ -36,8 +36,8 @@ The repository contains two docker-compose files for development and production.
 
 1. Clone git repository.
    ```sh
-   git clone git@github.com:hpi-dhc/signal-analysis-platform.git
-   cd signal-analysis-platform
+   git clone git@github.com:hpi-dhc/alps.git
+   cd alps
    ```
 2. Build and start services.
    ```sh
@@ -58,8 +58,8 @@ The repository contains two docker-compose files for development and production.
 
 1. Clone git repository.
    ```sh
-   git clone git@github.com:hpi-dhc/signal-analysis-platform.git
-   cd signal-analysis-platform
+   git clone git@github.com:hpi-dhc/alps.git
+   cd alps
    ```
 2. In the `docker-compose.production.yml` adjust the build argument `REACT_APP_BACKEND_URL` to the URL where the backend will be located.
 3. Configure the environment variables in `production.env` according to your setup. A secret key for Django can be generated under https://djecrety.ir/.
