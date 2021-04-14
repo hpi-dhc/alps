@@ -22,7 +22,7 @@ Download the full paper:
 
 You can find some videos demonstrating the interface on the [GitHub page](https://hpi-dhc.github.io/alps/).
 
-A [demo instance](http://ec2-54-165-78-234.compute-1.amazonaws.com/) of the Signal Analysis Platform is currently available. The **file upload is limited to 1MB** and will fail otherwise without warning. Do not upload any confidential data. As demo user, you are not allowed to delete any subjects, sessions, or datasets. The automatic synchronization will most likely fail, due to restricted resources on the demo system.
+A [demo instance](http://ec2-54-165-78-234.compute-1.amazonaws.com/) of Alps is currently available. The **file upload is limited to 1MB** and will fail otherwise without warning. Do not upload any confidential data. As demo user, you are not allowed to delete any subjects, sessions, or datasets. The automatic synchronization will most likely fail, due to restricted resources on the demo system.
 
 You can use the following data to login:
 - User: demo
