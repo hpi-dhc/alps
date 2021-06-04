@@ -15,8 +15,8 @@ This paper presents an extensible web platform with an integrated event-based sy
 Plug-ins for new devices, filtering and analysis methods allow the customization for different research scenarios.
 A case study on Heart Rate Variability (HRV) shows that the platform simplifies the comparative analysis of multiple signals and supports the exploration of data from different wearables.
 
-Download the full paper:  
-[ALPS: A Web Platform For Analyzing Multimodal Sensor Data in the Context of Digital Health](https://github.com/hpi-dhc/alps/raw/master/docs/alps_paper.pdf)
+Read the full paper:  
+[ALPS: A Web Platform For Analyzing Multimodal Sensor Data in the Context of Digital Health](https://doi.org/10.1109/ICHI48887.2020.9374371)
 
 ## Demo
 
