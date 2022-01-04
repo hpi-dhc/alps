@@ -10,7 +10,7 @@
     "@material-ui/icons": "4.2.1",
     "@material-ui/lab": "4.0.0-alpha.23",
     "@material-ui/pickers": "3.2.2",
-    "axios": "0.21.1",
+    "axios": "0.21.2",
     "dataframe-js": "1.4.3",
     "date-fns": "2.0.0-alpha.27",
     "js-file-download": "0.4.8",
