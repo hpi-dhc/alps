@@ -220,7 +220,7 @@ with_social = ["django-allauth (>=0.25.0)"]
 
 [[package]]
 name = "djangorestframework"
-version = "3.11.0"
+version = "3.11.2"
 description = "Web APIs for Django, made easy."
 category = "main"
 optional = false
@@ -698,7 +698,7 @@ testing = ["jaraco.itertools", "func-timeout"]
 [metadata]
 lock-version = "1.1"
 python-versions = "~3.7"
-content-hash = "8a081f6153dd5c6e347f1b2ba3348792ac26029d8b006b3e17a4634bb4796d20"
+content-hash = "f681102455876f9859c7c66c7cffebe2e6ff908cd36087189d215e92314e36b1"
 
 [metadata.files]
 amqp = [
@@ -783,8 +783,8 @@ django-rest-auth = [
     {file = "django-rest-auth-0.9.5.tar.gz", hash = "sha256:f11e12175dafeed772f50d740d22caeab27e99a3caca24ec65e66a8d6de16571"},
 ]
 djangorestframework = [
-    {file = "djangorestframework-3.11.0-py3-none-any.whl", hash = "sha256:05809fc66e1c997fd9a32ea5730d9f4ba28b109b9da71fccfa5ff241201fd0a4"},
-    {file = "djangorestframework-3.11.0.tar.gz", hash = "sha256:e782087823c47a26826ee5b6fa0c542968219263fb3976ec3c31edab23a4001f"},
+    {file = "djangorestframework-3.11.2-py3-none-any.whl", hash = "sha256:5cc724dc4b076463497837269107e1995b1fbc917468d1b92d188fd1af9ea789"},
+    {file = "djangorestframework-3.11.2.tar.gz", hash = "sha256:a5967b68a04e0d97d10f4df228e30f5a2d82ba63b9d03e1759f84993b7bf1b53"},
 ]
 fastparquet = []
 future = [
