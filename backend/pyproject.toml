@@ -14,7 +14,7 @@ django-rest-auth = "~0.9.5"
 djangorestframework = "~3.11.2"
 fastparquet = { git = "https://github.com/dask/fastparquet.git", rev = "6cc35e1" }
 jointly = "~0.1.5"
-numpy = "~1.18.4"
+numpy = "~1.21.0"
 pandas = "~1.0.3"
 plotly = "~4.7.1"
 psycopg2 = "~2.8.5"
