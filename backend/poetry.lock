@@ -177,7 +177,7 @@ six = "*"
 
 [[package]]
 name = "django"
-version = "2.2.12"
+version = "2.2.25"
 description = "A high-level Python Web framework that encourages rapid development and clean, pragmatic design."
 category = "main"
 optional = false
@@ -185,7 +185,7 @@ python-versions = ">=3.5"
 
 [package.dependencies]
 pytz = "*"
-sqlparse = "*"
+sqlparse = ">=0.2.2"
 
 [package.extras]
 argon2 = ["argon2-cffi (>=16.1.0)"]
@@ -772,8 +772,8 @@ cycler = [
     {file = "cycler-0.10.0.tar.gz", hash = "sha256:cd7b2d1018258d7247a71425e9f26463dfb444d411c39569972f4ce586b0c9d8"},
 ]
 django = [
-    {file = "Django-2.2.12-py3-none-any.whl", hash = "sha256:6ecd229e1815d4fc5240fc98f1cca78c41e7a8cd3e3f2eefadc4735031077916"},
-    {file = "Django-2.2.12.tar.gz", hash = "sha256:69897097095f336d5aeef45b4103dceae51c00afa6d3ae198a2a18e519791b7a"},
+    {file = "Django-2.2.25-py3-none-any.whl", hash = "sha256:08bad7ef7e90286b438dbe1412c3e633fbc7b96db04735f0c7baadeed52f3fad"},
+    {file = "Django-2.2.25.tar.gz", hash = "sha256:b1e65eaf371347d4b13eb7e061b09786c973061de95390c327c85c1e2aa2349c"},
 ]
 django-cors-headers = [
     {file = "django-cors-headers-3.2.1.tar.gz", hash = "sha256:a5960addecc04527ab26617e51b8ed42f0adab4594b24bb0f3c33e2bd3857c3f"},
